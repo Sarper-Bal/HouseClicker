@@ -1,9 +1,10 @@
 using UnityEngine;
-using System; // Event'ler için gerekli
+using System;
+using System.Collections; // Coroutine için gerekli
 
 public class CurrencyManager : MonoBehaviour
 {
-    // --- Singleton Pattern Başlangıcı ---
+    // --- Singleton Pattern (Değişiklik yok) ---
     public static CurrencyManager Instance { get; private set; }
 
     private void Awake()
@@ -15,44 +16,68 @@ public class CurrencyManager : MonoBehaviour
         else
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Sahne değişse bile bu obje yok olmasın.
+            DontDestroyOnLoad(gameObject);
         }
     }
-    // --- Singleton Pattern Sonu ---
 
     public long CurrentGold { get; private set; }
-
-    // Bu event, altın miktarı değiştiğinde diğer script'lere haber vermek için kullanılır (Örn: UI'ın güncellenmesi).
     public event Action<long> OnGoldChanged;
 
     private void Start()
     {
         LoadGold();
+        // --- YENİ EKLENEN KISIM ---
+        // Pasif gelir döngüsünü başlat.
+        StartCoroutine(PassiveIncomeCoroutine());
+        // -------------------------
     }
+
+    // --- YENİ EKLENEN COROUTINE ---
+    private IEnumerator PassiveIncomeCoroutine()
+    {
+        // Sonsuz döngü
+        while (true)
+        {
+            // 1 saniye bekle
+            yield return new WaitForSeconds(1f);
+
+            // Gerekli sistemler hazırsa pasif geliri ekle
+            if (UpgradeManager.Instance != null)
+            {
+                LevelData currentLevelData = UpgradeManager.Instance.GetCurrentLevelData();
+                if (currentLevelData != null && currentLevelData.goldPerSecond > 0)
+                {
+                    // AddGold fonksiyonu zaten kaydı ve UI bildirimini yapıyor.
+                    AddGold(currentLevelData.goldPerSecond);
+                }
+            }
+        }
+    }
+    // ----------------------------
 
     public void AddGold(long amount)
     {
-        if (amount < 0) return; // Negatif altın eklenmesini engelle.
+        if (amount < 0) return;
         CurrentGold += amount;
-        OnGoldChanged?.Invoke(CurrentGold); // Event'i tetikle.
-        SaveGold(); // Her altın kazandığında otomatik kaydet.
+        OnGoldChanged?.Invoke(CurrentGold);
+        // Sürekli kaydetmek performansı etkileyebilir, daha sonra optimize edilebilir.
+        // Şimdilik test için kalabilir.
+        SaveGold();
     }
 
     public void SpendGold(long amount)
     {
-        if (amount < 0) return; // Negatif harcama olmasın.
+        if (amount < 0) return;
         if (CurrentGold >= amount)
         {
             CurrentGold -= amount;
-            OnGoldChanged?.Invoke(CurrentGold); // Event'i tetikle.
+            OnGoldChanged?.Invoke(CurrentGold);
             SaveGold();
         }
     }
 
-    // Basit PlayerPrefs ile kayıt sistemi
     private void SaveGold()
     {
-        // long tipini doğrudan kaydedemediğimiz için string'e çeviriyoruz.
         PlayerPrefs.SetString("CurrentGold", CurrentGold.ToString());
     }
 
@@ -61,6 +86,6 @@ public class CurrencyManager : MonoBehaviour
         string goldStr = PlayerPrefs.GetString("CurrentGold", "0");
         long.TryParse(goldStr, out long loadedGold);
         CurrentGold = loadedGold;
-        OnGoldChanged?.Invoke(CurrentGold); // UI'ın başlangıçta doğru değeri göstermesi için tetikle.
+        OnGoldChanged?.Invoke(CurrentGold);
     }
 }

@@ -16,5 +16,10 @@ public class LevelData : ScriptableObject
 
     [Header("Visuals")]
     public Sprite houseSprite; // Bu seviyede evin nasıl görüneceği.
-    // İleride kozmetik binaları da buraya ekleyebiliriz.
+
+    // --- YENİ EKLENEN KISIM ---
+    [Header("Cosmetics")]
+    [Tooltip("Bu seviyeye ulaşıldığında gösterilecek olan kozmetik objelerin ID'leri.")]
+    public string[] cosmeticObjectsToShow;
+    // -------------------------
 }
