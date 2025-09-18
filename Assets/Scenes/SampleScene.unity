@@ -452,8 +452,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3078808b3f08a41769440d1796c96928, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HouseController
-  punchScaleAmount: 0.1
-  punchScaleDuration: 0.15
 --- !u!58 &342882573
 CircleCollider2D:
   m_ObjectHideFlags: 0
