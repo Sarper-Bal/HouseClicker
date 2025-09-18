@@ -1,10 +1,9 @@
 using UnityEngine;
 using System;
-using System.Collections; // Coroutine için gerekli
+using System.Collections;
 
 public class CurrencyManager : MonoBehaviour
 {
-    // --- Singleton Pattern (Değişiklik yok) ---
     public static CurrencyManager Instance { get; private set; }
 
     private void Awake()
@@ -23,45 +22,46 @@ public class CurrencyManager : MonoBehaviour
     public long CurrentGold { get; private set; }
     public event Action<long> OnGoldChanged;
 
+    // --- YENİ EKLENEN EVENT ---
+    // FloatingTextManager'ın dinleyeceği sinyal.
+    public event Action<long> OnPassiveGoldAdded;
+    // -------------------------
+
     private void Start()
     {
         LoadGold();
-        // --- YENİ EKLENEN KISIM ---
-        // Pasif gelir döngüsünü başlat.
         StartCoroutine(PassiveIncomeCoroutine());
-        // -------------------------
     }
 
-    // --- YENİ EKLENEN COROUTINE ---
     private IEnumerator PassiveIncomeCoroutine()
     {
-        // Sonsuz döngü
         while (true)
         {
-            // 1 saniye bekle
             yield return new WaitForSeconds(1f);
 
-            // Gerekli sistemler hazırsa pasif geliri ekle
             if (UpgradeManager.Instance != null)
             {
                 LevelData currentLevelData = UpgradeManager.Instance.GetCurrentLevelData();
                 if (currentLevelData != null && currentLevelData.goldPerSecond > 0)
                 {
-                    // AddGold fonksiyonu zaten kaydı ve UI bildirimini yapıyor.
-                    AddGold(currentLevelData.goldPerSecond);
+                    long passiveAmount = currentLevelData.goldPerSecond;
+
+                    // --- EVENT'İ TETİKLE ---
+                    // Pasif geliri ekleyeceğimizi haber veriyoruz.
+                    OnPassiveGoldAdded?.Invoke(passiveAmount);
+                    // -------------------------
+
+                    AddGold(passiveAmount);
                 }
             }
         }
     }
-    // ----------------------------
 
     public void AddGold(long amount)
     {
         if (amount < 0) return;
         CurrentGold += amount;
         OnGoldChanged?.Invoke(CurrentGold);
-        // Sürekli kaydetmek performansı etkileyebilir, daha sonra optimize edilebilir.
-        // Şimdilik test için kalabilir.
         SaveGold();
     }
 
