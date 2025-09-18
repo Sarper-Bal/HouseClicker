@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15f6ffa0f28034b4ab16fd5a7209b26d, type: 3}
   m_Name: Level_2
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
-  levelIndex: 3
+  levelIndex: 2
   upgradeCost: 10
   goldPerClick: 3
   goldPerSecond: 3
-  houseSprite: {fileID: 0}
+  houseSprite: {fileID: 21300000, guid: cdf346389d32d473bab364cf6bf1565d, type: 3}
+  cosmeticObjectsToShow:
+  - Well3_1
