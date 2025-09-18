@@ -12,6 +12,12 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TextMeshProUGUI upgradeButtonText;
 
+    // --- YENİ EKLENEN KISIM ---
+    [Header("Panel References")]
+    [SerializeField] private GameObject miniGamesMainPanel;
+    [SerializeField] private Button openMiniGamesButton;
+    // -------------------------
+
     private long displayedGold = 0;
     private Tween buttonPulseAnimation;
     private Vector3 upgradeButtonOriginalScale;
@@ -30,8 +36,24 @@ public class UIManager : MonoBehaviour
 
         upgradeButton.onClick.AddListener(() => UpgradeManager.Instance.AttemptUpgrade());
 
+        // --- YENİ EKLENEN KISIM ---
+        // Mini oyun butonuna paneli açma fonksiyonunu bağla.
+        openMiniGamesButton.onClick.AddListener(OpenMiniGamesPanel);
+        // Panelin kendisini başlangıçta kapat (bu satır önemli).
+        miniGamesMainPanel.SetActive(false);
+        // -------------------------
+
         InitializeUI();
     }
+
+    // --- YENİ EKLENEN FONKSİYON ---
+    private void OpenMiniGamesPanel()
+    {
+        miniGamesMainPanel.SetActive(true);
+    }
+    // ----------------------------
+
+    // ... (script'in geri kalanı aynı, değişiklik yok) ...
 
     private void OnDestroy()
     {
@@ -83,9 +105,7 @@ public class UIManager : MonoBehaviour
 
         long currentGold = CurrencyManager.Instance.CurrentGold;
         long requiredGold = UpgradeManager.Instance.levelConfigs[nextLevelIndex].upgradeCost;
-
         upgradeButtonText.text = $"{FormatNumber(currentGold)} / {FormatNumber(requiredGold)}";
-
         bool canAfford = currentGold >= requiredGold;
         upgradeButton.interactable = canAfford;
 
@@ -93,13 +113,10 @@ public class UIManager : MonoBehaviour
         {
             if (buttonPulseAnimation == null || !buttonPulseAnimation.IsActive())
             {
-                // --- YENİ VE ABARTILI ANİMASYON BURADA ---
-                // DOTween Sequence kullanarak daha fazla kontrol sağlıyoruz.
                 buttonPulseAnimation = DOTween.Sequence()
-                    .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 1.1f, 0.4f).SetEase(Ease.OutQuad)) // Hızlıca %10 büyü
-                    .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 0.98f, 0.8f).SetEase(Ease.InOutQuad)) // Yavaşça hafifçe küçül
-                    .SetLoops(-1, LoopType.Yoyo); // Sonsuz döngüde çalış
-                // ------------------------------------------
+                    .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 1.1f, 0.4f).SetEase(Ease.OutQuad))
+                    .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 0.98f, 0.8f).SetEase(Ease.InOutQuad))
+                    .SetLoops(-1, LoopType.Yoyo);
             }
         }
         else
@@ -121,7 +138,6 @@ public class UIManager : MonoBehaviour
             return (num / 1000000D).ToString("0.#") + "M";
         if (num >= 1000)
             return (num / 1000D).ToString("0.#") + "K";
-
         return num.ToString("#,0", CultureInfo.InvariantCulture);
     }
 }

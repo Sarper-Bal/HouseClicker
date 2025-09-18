@@ -15,6 +15,6 @@ MonoBehaviour:
   levelIndex: 0
   upgradeCost: 0
   goldPerClick: 1
-  goldPerSecond: 1
+  goldPerSecond: 0
   houseSprite: {fileID: 21300000, guid: 48c55eade0c784a5fbe93325a24480b2, type: 3}
   cosmeticObjectsToShow: []
