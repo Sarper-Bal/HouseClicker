@@ -1,8 +1,8 @@
 using UnityEngine;
-using UnityEngine.UI; // Button için gerekli
-using TMPro; // TextMeshPro için gerekli
-using System.Globalization; // Sayıları formatlamak için
-using DG.Tweening; // DOTween için
+using UnityEngine.UI;
+using TMPro;
+using System.Globalization;
+using DG.Tweening;
 
 public class UIManager : MonoBehaviour
 {
@@ -12,88 +12,107 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TextMeshProUGUI upgradeButtonText;
 
-    private long displayedGold = 0; // Animasyon için mevcut gösterilen altın
+    private long displayedGold = 0;
+    private Tween buttonPulseAnimation;
+    private Vector3 upgradeButtonOriginalScale;
 
     private void Start()
     {
-        // İlgili event'lere abone ol. Bu sayede CurrencyManager veya UpgradeManager'da
-        // bir değişiklik olduğunda bizim fonksiyonlarımız otomatik olarak çağrılır.
-        CurrencyManager.Instance.OnGoldChanged += UpdateGoldText;
-        UpgradeManager.Instance.OnLevelUp += UpdateLevelUI;
+        if (upgradeButton != null)
+        {
+            upgradeButtonOriginalScale = upgradeButton.transform.localScale;
+        }
 
-        // Butonun tıklama olayına AttemptUpgrade fonksiyonunu bağla.
+        if (CurrencyManager.Instance != null)
+            CurrencyManager.Instance.OnGoldChanged += UpdateGoldText;
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnLevelUp += UpdateLevelUI;
+
         upgradeButton.onClick.AddListener(() => UpgradeManager.Instance.AttemptUpgrade());
 
-        // Başlangıç değerlerini set et
         InitializeUI();
     }
 
     private void OnDestroy()
     {
-        // Obje yok olduğunda event aboneliklerini iptal et, bu memory leak'leri önler.
         if (CurrencyManager.Instance != null)
             CurrencyManager.Instance.OnGoldChanged -= UpdateGoldText;
         if (UpgradeManager.Instance != null)
             UpgradeManager.Instance.OnLevelUp -= UpdateLevelUI;
+
+        if (buttonPulseAnimation != null) buttonPulseAnimation.Kill();
     }
 
     private void InitializeUI()
     {
-        // Oyuncu oyunu açtığında UI'ın doğru değerlerle başlamasını sağla.
-        UpdateLevelUI(UpgradeManager.Instance.GetCurrentLevelData());
-        UpdateGoldText(CurrencyManager.Instance.CurrentGold);
+        levelText.text = "Seviye: " + (UpgradeManager.Instance.GetCurrentLevelData().levelIndex + 1);
+        displayedGold = CurrencyManager.Instance.CurrentGold;
+        goldText.text = FormatNumber(displayedGold);
+        UpdateUpgradeButton();
     }
 
     private void UpdateGoldText(long newGoldAmount)
     {
-        // DOTween ile sayıyı akıcı bir şekilde artır/azalt
         DOTween.To(() => displayedGold, x => displayedGold = x, newGoldAmount, 0.5f)
             .OnUpdate(() =>
             {
-                // Sayıyı daha okunaklı formatla (örn: 1.234 K, 5.678 M)
                 goldText.text = FormatNumber(displayedGold);
             });
 
-        // Altın miktarı her değiştiğinde butonun durumunu kontrol et.
-        CheckUpgradeButtonState();
+        UpdateUpgradeButton();
     }
 
     private void UpdateLevelUI(LevelData newLevelData)
     {
         if (newLevelData == null) return;
-
         levelText.text = "Seviye: " + (newLevelData.levelIndex + 1);
+        UpdateUpgradeButton();
+    }
 
-        // Son seviyeye ulaşıldı mı?
+    private void UpdateUpgradeButton()
+    {
         int nextLevelIndex = UpgradeManager.Instance.CurrentLevel + 1;
-        if (nextLevelIndex < UpgradeManager.Instance.levelConfigs.Count)
+        if (nextLevelIndex >= UpgradeManager.Instance.levelConfigs.Count)
         {
-            LevelData nextLevelData = UpgradeManager.Instance.levelConfigs[nextLevelIndex];
-            upgradeButtonText.text = $"Geliştir\n({FormatNumber(nextLevelData.upgradeCost)})";
-            upgradeButton.gameObject.SetActive(true);
+            upgradeButton.interactable = false;
+            upgradeButtonText.text = "Maksimum Seviye";
+            if (buttonPulseAnimation != null) buttonPulseAnimation.Kill();
+            upgradeButton.transform.localScale = upgradeButtonOriginalScale;
+            return;
+        }
+
+        long currentGold = CurrencyManager.Instance.CurrentGold;
+        long requiredGold = UpgradeManager.Instance.levelConfigs[nextLevelIndex].upgradeCost;
+
+        upgradeButtonText.text = $"{FormatNumber(currentGold)} / {FormatNumber(requiredGold)}";
+
+        bool canAfford = currentGold >= requiredGold;
+        upgradeButton.interactable = canAfford;
+
+        if (canAfford)
+        {
+            if (buttonPulseAnimation == null || !buttonPulseAnimation.IsActive())
+            {
+                // --- YENİ VE ABARTILI ANİMASYON BURADA ---
+                // DOTween Sequence kullanarak daha fazla kontrol sağlıyoruz.
+                buttonPulseAnimation = DOTween.Sequence()
+                    .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 1.1f, 0.4f).SetEase(Ease.OutQuad)) // Hızlıca %10 büyü
+                    .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 0.98f, 0.8f).SetEase(Ease.InOutQuad)) // Yavaşça hafifçe küçül
+                    .SetLoops(-1, LoopType.Yoyo); // Sonsuz döngüde çalış
+                // ------------------------------------------
+            }
         }
         else
         {
-            // Son seviyedeyse butonu gizle.
-            upgradeButtonText.text = "Maksimum Seviye";
-            upgradeButton.gameObject.SetActive(false);
-        }
-
-        CheckUpgradeButtonState();
-    }
-
-    private void CheckUpgradeButtonState()
-    {
-        int nextLevelIndex = UpgradeManager.Instance.CurrentLevel + 1;
-        if (nextLevelIndex < UpgradeManager.Instance.levelConfigs.Count)
-        {
-            LevelData nextLevelData = UpgradeManager.Instance.levelConfigs[nextLevelIndex];
-            // Yeterli altın varsa butonu tıklanabilir yap, yoksa yapma.
-            upgradeButton.interactable = CurrencyManager.Instance.CurrentGold >= nextLevelData.upgradeCost;
+            if (buttonPulseAnimation != null)
+            {
+                buttonPulseAnimation.Kill();
+                buttonPulseAnimation = null;
+                upgradeButton.transform.localScale = upgradeButtonOriginalScale;
+            }
         }
     }
 
-    // Sayıları kısaltan (1000 -> 1K, 1000000 -> 1M) yardımcı fonksiyon
     private string FormatNumber(long num)
     {
         if (num >= 1000000000)
