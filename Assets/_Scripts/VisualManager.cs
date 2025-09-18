@@ -15,42 +15,23 @@ public class VisualManager : MonoBehaviour
     [Tooltip("Kozmetik objeler belirirken ne kadar sürede büyüsün?")]
     [SerializeField] private float cosmeticAppearDuration = 0.5f;
 
-    // Sahnedeki tüm kozmetik objeleri ID'leriyle birlikte hızlıca bulmak için bir sözlük (dictionary).
     private Dictionary<string, CosmeticObject> cosmeticObjectMap;
-    // --- YENİ EKLENEN KISIM ---
-    // Her bir kozmetik objenin başlangıçtaki orijinal ölçeğini saklamak için yeni bir sözlük.
     private Dictionary<string, Vector3> cosmeticObjectInitialScales;
-    // -------------------------
 
     private void Awake()
     {
-        // Sözlükleri (dictionary) başlat
         cosmeticObjectMap = new Dictionary<string, CosmeticObject>();
-        cosmeticObjectInitialScales = new Dictionary<string, Vector3>(); // Yeni sözlüğü başlat
+        cosmeticObjectInitialScales = new Dictionary<string, Vector3>();
 
         CosmeticObject[] allCosmeticObjects = FindObjectsOfType<CosmeticObject>(true);
-
-        Debug.Log($"Toplam {allCosmeticObjects.Length} adet CosmeticObject bulundu. Listeleniyor...");
 
         foreach (var cosmeticObject in allCosmeticObjects)
         {
             if (!string.IsNullOrEmpty(cosmeticObject.objectID) && !cosmeticObjectMap.ContainsKey(cosmeticObject.objectID))
             {
-                Debug.Log($"Kozmetik obje bulundu ve eklendi: {cosmeticObject.name}, ID: {cosmeticObject.objectID}");
-
-                // Objeyi ve orijinal ölçeğini sözlüklere ekle
                 cosmeticObjectMap.Add(cosmeticObject.objectID, cosmeticObject);
-                // --- YENİ EKLENEN KISIM ---
-                // Objeyi kapatmadan ÖNCE mevcut ölçeğini hafızaya alıyoruz.
                 cosmeticObjectInitialScales.Add(cosmeticObject.objectID, cosmeticObject.transform.localScale);
-                // -------------------------
-
-                // Başlangıçta hepsi kapalı olsun.
                 cosmeticObject.gameObject.SetActive(false);
-            }
-            else
-            {
-                Debug.LogWarning($"Bulunan kozmetik objenin ID'si boş veya bu ID zaten kullanılmış: {cosmeticObject.name}");
             }
         }
     }
@@ -59,7 +40,13 @@ public class VisualManager : MonoBehaviour
     {
         if (UpgradeManager.Instance != null)
         {
+            // Gelecekteki seviye atlamaları için event'e abone ol.
             UpgradeManager.Instance.OnLevelUp += HandleLevelUp;
+
+            // --- ÇÖZÜM BURADA ---
+            // Oyuna başlarken, anonsu kaçırma ihtimaline karşı mevcut yüklü seviye ne ise
+            // görselleri ona göre GÜNCELLE. Bu, başlangıç senkronizasyonunu sağlar.
+            HandleLevelUp(UpgradeManager.Instance.GetCurrentLevelData());
         }
     }
 
@@ -71,28 +58,32 @@ public class VisualManager : MonoBehaviour
         }
     }
 
+    // Bu fonksiyon hem oyun başlangıcında hem de seviye atlandığında çalışacak.
     private void HandleLevelUp(LevelData newLevelData)
     {
+        if (newLevelData == null)
+        {
+            Debug.LogError("HandleLevelUp fonksiyonuna gelen LevelData null!");
+            return;
+        }
         UpdateHouseSprite(newLevelData);
         UpdateCosmeticObjects(newLevelData);
     }
 
     private void UpdateHouseSprite(LevelData newLevelData)
     {
-        if (houseSpriteRenderer == null)
-        {
-            Debug.LogError("House Sprite Renderer referansı VisualManager'da atanmamış!");
-            return;
-        }
-        if (newLevelData.houseSprite == null || houseSpriteRenderer.sprite == newLevelData.houseSprite)
-        {
-            return;
-        }
+        if (houseSpriteRenderer == null) return;
 
-        Sequence transitionSequence = DOTween.Sequence();
-        transitionSequence.Append(houseSpriteRenderer.DOFade(0, spriteTransitionDuration));
-        transitionSequence.AppendCallback(() => houseSpriteRenderer.sprite = newLevelData.houseSprite);
-        transitionSequence.Append(houseSpriteRenderer.DOFade(1, spriteTransitionDuration));
+        // Sprite null ise veya zaten aynı sprite ise işlem yapma.
+        // Başlangıçta aynı sprite olsa bile kozmetik objelerin güncellenmesi için devam etmesi gerekiyor,
+        // bu yüzden bu kontrolü daha spesifik hale getirelim.
+        if (newLevelData.houseSprite != null && houseSpriteRenderer.sprite != newLevelData.houseSprite)
+        {
+            Sequence transitionSequence = DOTween.Sequence();
+            transitionSequence.Append(houseSpriteRenderer.DOFade(0, spriteTransitionDuration));
+            transitionSequence.AppendCallback(() => houseSpriteRenderer.sprite = newLevelData.houseSprite);
+            transitionSequence.Append(houseSpriteRenderer.DOFade(1, spriteTransitionDuration));
+        }
     }
 
     private void UpdateCosmeticObjects(LevelData newLevelData)
@@ -109,21 +100,15 @@ public class VisualManager : MonoBehaviour
             if (cosmeticObjectMap.ContainsKey(idToShow))
             {
                 GameObject objToShow = cosmeticObjectMap[idToShow].gameObject;
-                objToShow.SetActive(true);
-
-                // --- GÜNCELLENEN KISIM ---
-                // Hafızaya aldığımız orijinal ölçeği al.
                 Vector3 initialScale = cosmeticObjectInitialScales[idToShow];
 
-                // Animasyonu başlat.
+                // Eğer obje zaten aktifse animasyon yapma, sadece orada kalsın.
+                // Bu, oyun başlangıcında her şeyin sıfırdan büyümesini engeller.
+                if (objToShow.activeSelf) continue;
+
+                objToShow.SetActive(true);
                 objToShow.transform.localScale = Vector3.zero;
-                // Animasyonun hedefi artık Vector3.one değil, hafızadaki 'initialScale' değeri.
                 objToShow.transform.DOScale(initialScale, cosmeticAppearDuration).SetEase(Ease.OutBack);
-                // -------------------------
-            }
-            else
-            {
-                Debug.LogWarning($"Görünmesi istenen '{idToShow}' ID'li obje sahnede bulunamadı!");
             }
         }
     }
