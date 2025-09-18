@@ -5,12 +5,8 @@ using DG.Tweening;
 
 public class MiniGameUIController : MonoBehaviour
 {
-    // --- BU KISIM DEĞİŞTİ ---
-    // Paneli açma/kapama sorumluluğu artık UIManager'da olduğu için
-    // openMiniGamesButton referansını sildik.
     [Header("Ana Paneller ve Butonlar")]
     [SerializeField] private Button closeMiniGamesButton;
-    // ---------------------------
 
     [Header("Sayı Toplama Oyunu (Sum Game) UI")]
     [SerializeField] private SumGame sumGameLogic;
@@ -19,31 +15,36 @@ public class MiniGameUIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI resultText;
     [SerializeField] private TextMeshProUGUI costAndRewardText;
 
+    // --- YENİ EKLENEN KISIM ---
+    // Sonuç metninin orijinal ölçeğini saklamak için bir değişken.
+    private Vector3 resultTextOriginalScale;
+    // -------------------------
+
     private void Start()
     {
-        // --- BU KISIM DEĞİŞTİ ---
-        // Sadece kapatma butonunu dinliyoruz.
         closeMiniGamesButton.onClick.AddListener(CloseMiniGamesPanel);
-        // ---------------------------
-
         playSumGameButton.onClick.AddListener(PlaySumGame);
+
+        // --- YENİ EKLENEN KISIM ---
+        // Oyun başlarken sonuç metninin mevcut ölçeğini hafızaya al.
+        if (resultText != null)
+        {
+            resultTextOriginalScale = resultText.transform.localScale;
+        }
+        // -------------------------
+
         resultText.text = "";
     }
 
-    // OnEnable, obje aktif olduğunda çalışan bir Unity fonksiyonudur.
-    // Panelimiz açıldığında bu fonksiyon tetiklenecek.
     private void OnEnable()
     {
-        // Paneli açarken maliyet/ödül metnini güncelle
         costAndRewardText.text = $"Maliyet: {sumGameLogic.CostToPlay} Altın\nÖdül: {sumGameLogic.RewardOnWin} Altın";
         numbersText.text = "Sayılar: ?, ?";
-        resultText.text = ""; // Her açıldığında sonuç metnini temizle
+        resultText.text = "";
     }
 
     private void Update()
     {
-        // Cooldown metni aynı şekilde çalışmaya devam ediyor.
-        // Bu script artık sadece panel aktifken çalıştığı için if kontrolüne gerek yok.
         float remainingCooldown = MiniGameManager.Instance.GetRemainingCooldown(sumGameLogic.GameID);
         if (remainingCooldown > 0)
         {
@@ -57,15 +58,10 @@ public class MiniGameUIController : MonoBehaviour
         }
     }
 
-    // --- BU KISIM DEĞİŞTİ ---
-    // Kapatma fonksiyonu artık kendi panelini kapatıyor.
     private void CloseMiniGamesPanel()
     {
         gameObject.SetActive(false);
     }
-    // ---------------------------
-
-    // ... (PlaySumGame ve diğer fonksiyonlar aynı, değişiklik yok) ...
 
     private void PlaySumGame()
     {
@@ -94,9 +90,13 @@ public class MiniGameUIController : MonoBehaviour
 
     private void AnimateResultText()
     {
+        // --- GÜNCELLENEN KISIM ---
         resultText.transform.localScale = Vector3.zero;
         resultText.DOFade(1, 0);
-        resultText.transform.DOScale(1, 0.5f).SetEase(Ease.OutBack);
+        // Animasyonu sabit bir '1' değerine değil, hafızadaki 'orijinal' ölçeğe yap.
+        resultText.transform.DOScale(resultTextOriginalScale, 0.5f).SetEase(Ease.OutBack);
+        // -------------------------
+
         resultText.DOFade(0, 1f).SetDelay(2f);
     }
 }
