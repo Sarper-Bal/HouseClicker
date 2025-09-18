@@ -761,8 +761,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VisualManager
   houseSpriteRenderer: {fileID: 342882574}
-  spriteTransitionDuration: 0.25
-  cosmeticAppearDuration: 0.5
+  transitionDuration: 0.25
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
