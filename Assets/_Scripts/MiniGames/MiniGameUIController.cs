@@ -21,10 +21,7 @@ public class MiniGameUIController : MonoBehaviour
 
     private int num1, num2;
     private int cardsRevealedCount;
-
-    // --- YENİ EKLENEN KISIM ---
-    private Vector3 resultTextOriginalScale; // Sonuç metninin orijinal ölçeği
-    // -------------------------
+    private Vector3 resultTextOriginalScale;
 
     private void Start()
     {
@@ -34,13 +31,10 @@ public class MiniGameUIController : MonoBehaviour
         card1.OnCardRevealed += OnCardRevealed;
         card2.OnCardRevealed += OnCardRevealed;
 
-        // --- YENİ EKLENEN KISIM ---
-        // Oyun başlarken sonuç metninin ölçeğini hafızaya al.
         if (resultText != null)
         {
             resultTextOriginalScale = resultText.transform.localScale;
         }
-        // -------------------------
     }
 
     private void OnEnable()
@@ -51,7 +45,6 @@ public class MiniGameUIController : MonoBehaviour
 
     private void Update()
     {
-        // ... (Bu fonksiyonda değişiklik yok) ...
         float remainingCooldown = MiniGameManager.Instance.GetRemainingCooldown(sumGameLogic.GameID);
         if (remainingCooldown > 0)
         {
@@ -72,7 +65,6 @@ public class MiniGameUIController : MonoBehaviour
 
     private void StartNewGame()
     {
-        // ... (Bu fonksiyonda değişiklik yok) ...
         if (CurrencyManager.Instance.CurrentGold < sumGameLogic.CostToPlay)
         {
             resultText.text = "Yetersiz Altın!";
@@ -81,9 +73,16 @@ public class MiniGameUIController : MonoBehaviour
         }
         CurrencyManager.Instance.SpendGold(sumGameLogic.CostToPlay);
         MiniGameManager.Instance.RecordPlayTime(sumGameLogic.GameID);
+
         SumGameData data = sumGameLogic.GameData;
+
         num1 = Random.Range(data.minNumber, data.maxNumber + 1);
-        num2 = Random.Range(data.maxNumber, data.maxNumber + 1); // Bu satırda bir hata vardı, düzeltildi.
+
+        // --- KOPYALA-YAPIŞTIR HATASI BURADA DÜZELTİLDİ ---
+        // Eskiden: Random.Range(data.maxNumber, data.maxNumber + 1) yazıyordu.
+        num2 = Random.Range(data.minNumber, data.maxNumber + 1);
+        // -------------------------------------------------
+
         ResetUIForNewGame();
         card1.SetupCard(num1);
         card2.SetupCard(num2);
@@ -100,7 +99,6 @@ public class MiniGameUIController : MonoBehaviour
 
     private IEnumerator ShowResultAfterDelay(float delay)
     {
-        // ... (Bu fonksiyonda değişiklik yok) ...
         yield return new WaitForSeconds(delay);
         SumGameData data = sumGameLogic.GameData;
         int total = num1 + num2;
@@ -128,13 +126,9 @@ public class MiniGameUIController : MonoBehaviour
 
     private void AnimateResultText()
     {
-        // --- GÜNCELLENEN KISIM ---
-        resultText.transform.localScale = Vector3.zero; // Animasyon için sıfırla
+        resultText.transform.localScale = Vector3.zero;
         resultText.DOFade(1, 0);
-        // Animasyonu sabit bir değere değil, hafızadaki orijinal ölçeğe yap.
         resultText.transform.DOScale(resultTextOriginalScale, 0.5f).SetEase(Ease.OutBack);
-        // -------------------------
-
         resultText.DOFade(0, 1f).SetDelay(3f);
     }
 }
