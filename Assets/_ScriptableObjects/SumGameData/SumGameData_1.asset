@@ -16,4 +16,4 @@ MonoBehaviour:
   rewardOnWin: 50
   minNumber: 1
   maxNumber: 10
-  targetSum: 8
+  targetSum: 15
