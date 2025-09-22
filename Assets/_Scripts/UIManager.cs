@@ -12,11 +12,13 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TextMeshProUGUI upgradeButtonText;
 
-    // --- YENİ EKLENEN KISIM ---
+    // --- YENİDEN EKLENEN KISIM ---
     [Header("Panel References")]
+    [Tooltip("İçinde tüm mini oyunların bulunduğu ana panel.")]
     [SerializeField] private GameObject miniGamesMainPanel;
+    [Tooltip("Yukarıdaki paneli açacak olan buton.")]
     [SerializeField] private Button openMiniGamesButton;
-    // -------------------------
+    // --- EKLENEN KISIM SONU ---
 
     private long displayedGold = 0;
     private Tween buttonPulseAnimation;
@@ -36,24 +38,31 @@ public class UIManager : MonoBehaviour
 
         upgradeButton.onClick.AddListener(() => UpgradeManager.Instance.AttemptUpgrade());
 
-        // --- YENİ EKLENEN KISIM ---
+        // --- YENİDEN EKLENEN KISIM ---
         // Mini oyun butonuna paneli açma fonksiyonunu bağla.
-        openMiniGamesButton.onClick.AddListener(OpenMiniGamesPanel);
-        // Panelin kendisini başlangıçta kapat (bu satır önemli).
-        miniGamesMainPanel.SetActive(false);
-        // -------------------------
+        if (openMiniGamesButton != null)
+        {
+            openMiniGamesButton.onClick.AddListener(OpenMiniGamesPanel);
+        }
+        // Panelin kendisini başlangıçta kapat.
+        if (miniGamesMainPanel != null)
+        {
+            miniGamesMainPanel.SetActive(false);
+        }
+        // --- EKLENEN KISIM SONU ---
 
         InitializeUI();
     }
 
-    // --- YENİ EKLENEN FONKSİYON ---
+    // --- YENİDEN EKLENEN FONKSİYON ---
     private void OpenMiniGamesPanel()
     {
-        miniGamesMainPanel.SetActive(true);
+        if (miniGamesMainPanel != null)
+        {
+            miniGamesMainPanel.SetActive(true);
+        }
     }
-    // ----------------------------
-
-    // ... (script'in geri kalanı aynı, değişiklik yok) ...
+    // --- EKLENEN FONKSİYON SONU ---
 
     private void OnDestroy()
     {
@@ -67,9 +76,15 @@ public class UIManager : MonoBehaviour
 
     private void InitializeUI()
     {
-        levelText.text = "Seviye: " + (UpgradeManager.Instance.GetCurrentLevelData().levelIndex + 1);
-        displayedGold = CurrencyManager.Instance.CurrentGold;
-        goldText.text = FormatNumber(displayedGold);
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.GetCurrentLevelData() != null)
+        {
+            levelText.text = "Seviye: " + (UpgradeManager.Instance.GetCurrentLevelData().levelIndex + 1);
+        }
+        if (CurrencyManager.Instance != null)
+        {
+            displayedGold = CurrencyManager.Instance.CurrentGold;
+            goldText.text = FormatNumber(displayedGold);
+        }
         UpdateUpgradeButton();
     }
 
@@ -93,13 +108,15 @@ public class UIManager : MonoBehaviour
 
     private void UpdateUpgradeButton()
     {
+        if (UpgradeManager.Instance == null || CurrencyManager.Instance == null) return;
+
         int nextLevelIndex = UpgradeManager.Instance.CurrentLevel + 1;
         if (nextLevelIndex >= UpgradeManager.Instance.levelConfigs.Count)
         {
             upgradeButton.interactable = false;
             upgradeButtonText.text = "Maksimum Seviye";
             if (buttonPulseAnimation != null) buttonPulseAnimation.Kill();
-            upgradeButton.transform.localScale = upgradeButtonOriginalScale;
+            if (upgradeButton != null) upgradeButton.transform.localScale = upgradeButtonOriginalScale;
             return;
         }
 
@@ -125,7 +142,7 @@ public class UIManager : MonoBehaviour
             {
                 buttonPulseAnimation.Kill();
                 buttonPulseAnimation = null;
-                upgradeButton.transform.localScale = upgradeButtonOriginalScale;
+                if (upgradeButton != null) upgradeButton.transform.localScale = upgradeButtonOriginalScale;
             }
         }
     }
