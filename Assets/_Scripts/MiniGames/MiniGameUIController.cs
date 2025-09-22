@@ -1,91 +1,168 @@
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UI; // LayoutRebuilder için bu satır önemli
 using TMPro;
 using DG.Tweening;
+using System.Collections.Generic;
 using System.Collections;
 
 public class MiniGameUIController : MonoBehaviour
 {
-    [Header("Ana Paneller ve Butonlar")]
-    [SerializeField] private Button closeMiniGamesButton;
+    [Header("Ana Paneller")]
+    [SerializeField] private GameObject mainPanel;
+    [SerializeField] private GameObject gameListPanel;
+    [SerializeField] private GameObject sumGamePanel;
 
-    [Header("Sayı Toplama Oyunu (Sum Game) UI")]
-    [SerializeField] private SumGame sumGameLogic;
+    [Header("Liste Ayarları")]
+    [SerializeField] private GameObject miniGameListItemPrefab;
+    [SerializeField] private Transform listContentParent;
+    [SerializeField] private TextMeshProUGUI listStatusText;
+
+    [Header("Oyun Referansları")]
+    [SerializeField] private List<SumGame> availableSumGames;
+
+    [Header("Genel Butonlar")]
+    [SerializeField] private Button closeAndBackButton;
+
+    [Header("Sayı Oyunu UI Elemanları")]
     [SerializeField] private Button playSumGameButton;
-    [SerializeField] private TextMeshProUGUI resultText;
-    [SerializeField] private TextMeshProUGUI costAndRewardText;
+    [SerializeField] private TextMeshProUGUI sumGameResultText;
+    [SerializeField] private TextMeshProUGUI sumGameCostText;
+    [SerializeField] private RevealCard sumGameCard1;
+    [SerializeField] private RevealCard sumGameCard2;
 
-    [Header("İnteraktif Kartlar")]
-    [SerializeField] private RevealCard card1;
-    [SerializeField] private RevealCard card2;
-
+    private SumGame currentActiveGame;
     private int num1, num2;
     private int cardsRevealedCount;
     private Vector3 resultTextOriginalScale;
 
     private void Start()
     {
-        closeMiniGamesButton.onClick.AddListener(CloseMiniGamesPanel);
-        playSumGameButton.onClick.AddListener(StartNewGame);
+        closeAndBackButton.onClick.AddListener(HandleBackAndCloseButton);
+        playSumGameButton.onClick.AddListener(PlaySumGame);
+        sumGameCard1.OnCardRevealed += OnCardRevealed;
+        sumGameCard2.OnCardRevealed += OnCardRevealed;
 
-        card1.OnCardRevealed += OnCardRevealed;
-        card2.OnCardRevealed += OnCardRevealed;
-
-        if (resultText != null)
+        if (sumGameResultText != null)
         {
-            resultTextOriginalScale = resultText.transform.localScale;
+            resultTextOriginalScale = sumGameResultText.transform.localScale;
         }
+
+        gameListPanel.SetActive(false);
+        sumGamePanel.SetActive(false);
     }
 
     private void OnEnable()
     {
-        costAndRewardText.text = $"Maliyet: {sumGameLogic.CostToPlay} Altın\nÖdül: {sumGameLogic.RewardOnWin} Altın";
-        ResetUIForNewGame();
+        ShowGameListPanel();
+        if (listStatusText != null) listStatusText.text = "";
+
+        // --- SORUN 1 ÇÖZÜMÜ (DAHA SAĞLAM YÖNTEM) ---
+        StartCoroutine(RebuildListLayout());
     }
 
-    private void Update()
+    private IEnumerator RebuildListLayout()
     {
-        float remainingCooldown = MiniGameManager.Instance.GetRemainingCooldown(sumGameLogic.GameID);
-        if (remainingCooldown > 0)
+        PopulateGameList();
+        // Bir sonraki frame'e kadar bekle. Bu, Unity'nin UI objelerini yaratmasına zaman tanır.
+        yield return new WaitForEndOfFrame();
+        // UI sistemini güncellemeyi zorla. Bu, VerticalLayoutGroup'un elemanları doğru çizmesini sağlar.
+        if (listContentParent != null)
         {
-            playSumGameButton.GetComponentInChildren<TextMeshProUGUI>().text = $"Oyna ({remainingCooldown:F0}s)";
-            playSumGameButton.interactable = false;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(listContentParent as RectTransform);
+        }
+    }
+
+    private void PopulateGameList()
+    {
+        foreach (Transform child in listContentParent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        foreach (SumGame game in availableSumGames)
+        {
+            if (game.GameData == null)
+            {
+                Debug.LogError($"HATA! '{game.gameObject.name}' objesindeki SumGame'in GameData'sı atanmamış! Lütfen Adım 2'yi uygulayın.", game.gameObject);
+                continue;
+            }
+
+            GameObject listItemObject = Instantiate(miniGameListItemPrefab, listContentParent);
+            MiniGameListItem listItem = listItemObject.GetComponent<MiniGameListItem>();
+            SumGameData data = game.GameData;
+            string infoText = $"Maliyet: {data.costToPlay} / Ödül: {data.rewardOnWin}";
+            listItem.Setup(data.gameIcon, data.gameName, infoText);
+
+            listItem.AddClickListener(() => TryEnterGame(game));
+        }
+    }
+
+    private void TryEnterGame(SumGame game)
+    {
+        if (game.GameData == null)
+        {
+            Debug.LogError("Oyun Verisi (GameData) bulunamadığı için oyuna girilemiyor!");
+            return;
+        }
+
+        if (CurrencyManager.Instance.CurrentGold >= game.GameData.costToPlay)
+        {
+            ShowSumGamePanel(game);
         }
         else
         {
-            playSumGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Oyna";
-            playSumGameButton.interactable = true;
+            listStatusText.text = "Yetersiz Altın!";
+            listStatusText.DOFade(1, 0.2f).OnComplete(() => listStatusText.DOFade(0, 1f).SetDelay(1f));
         }
     }
 
-    private void CloseMiniGamesPanel()
+    private void ShowGameListPanel()
     {
-        gameObject.SetActive(false);
+        gameListPanel.SetActive(true);
+        sumGamePanel.SetActive(false);
     }
 
-    private void StartNewGame()
+    private void ShowSumGamePanel(SumGame game)
     {
-        if (CurrencyManager.Instance.CurrentGold < sumGameLogic.CostToPlay)
+        currentActiveGame = game;
+        gameListPanel.SetActive(false);
+        sumGamePanel.SetActive(true);
+        SetupSumGamePanel(game);
+    }
+
+    private void SetupSumGamePanel(SumGame game)
+    {
+        SumGameData data = game.GameData;
+        sumGameCostText.text = $"Maliyet: {data.costToPlay} Altın\nÖdül: {data.rewardOnWin} Altın";
+        sumGameResultText.text = "";
+        cardsRevealedCount = 0;
+        sumGameCard1.ResetCard();
+        sumGameCard2.ResetCard();
+        playSumGameButton.interactable = true;
+    }
+
+    private void PlaySumGame()
+    {
+        if (currentActiveGame == null || currentActiveGame.GameData == null)
         {
-            resultText.text = "Yetersiz Altın!";
-            AnimateResultText();
+            Debug.LogError("HATA: Oynanacak oyunun verisi yüklenemedi!");
             return;
         }
-        CurrencyManager.Instance.SpendGold(sumGameLogic.CostToPlay);
-        MiniGameManager.Instance.RecordPlayTime(sumGameLogic.GameID);
 
-        SumGameData data = sumGameLogic.GameData;
+        if (MiniGameManager.Instance.GetRemainingCooldown(currentActiveGame.GameID) > 0) return;
+
+        SumGameData data = currentActiveGame.GameData;
+
+        // Ödeme burada yapılır.
+        CurrencyManager.Instance.SpendGold(data.costToPlay);
+        MiniGameManager.Instance.RecordPlayTime(currentActiveGame.GameID);
 
         num1 = Random.Range(data.minNumber, data.maxNumber + 1);
-
-        // --- KOPYALA-YAPIŞTIR HATASI BURADA DÜZELTİLDİ ---
-        // Eskiden: Random.Range(data.maxNumber, data.maxNumber + 1) yazıyordu.
         num2 = Random.Range(data.minNumber, data.maxNumber + 1);
-        // -------------------------------------------------
 
-        ResetUIForNewGame();
-        card1.SetupCard(num1);
-        card2.SetupCard(num2);
+        sumGameCard1.SetupCard(num1);
+        sumGameCard2.SetupCard(num2);
+        playSumGameButton.interactable = false;
     }
 
     private void OnCardRevealed()
@@ -100,35 +177,43 @@ public class MiniGameUIController : MonoBehaviour
     private IEnumerator ShowResultAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        SumGameData data = sumGameLogic.GameData;
+        SumGameData data = currentActiveGame.GameData;
         int total = num1 + num2;
         MiniGameResult result;
         if (total <= data.targetSum)
         {
-            result = new MiniGameResult { IsWin = true, Payout = sumGameLogic.RewardOnWin, ResultMessage = $"{num1} + {num2} = {total}\nKazandın!" };
+            result = new MiniGameResult { IsWin = true, Payout = data.rewardOnWin, ResultMessage = $"{num1} + {num2} = {total}\nKazandın!" };
             CurrencyManager.Instance.AddGold(result.Payout);
         }
         else
         {
             result = new MiniGameResult { IsWin = false, Payout = 0, ResultMessage = $"{num1} + {num2} = {total}\nKaybettin!" };
         }
-        resultText.text = result.ResultMessage;
-        AnimateResultText();
+        sumGameResultText.text = result.ResultMessage;
+        AnimateResultText(sumGameResultText);
+        playSumGameButton.interactable = true;
     }
 
-    private void ResetUIForNewGame()
+    private void AnimateResultText(TextMeshProUGUI text)
     {
-        resultText.text = "";
-        cardsRevealedCount = 0;
-        card1.ResetCard();
-        card2.ResetCard();
+        if (resultTextOriginalScale == Vector3.zero && text != null)
+            resultTextOriginalScale = text.transform.localScale;
+
+        text.transform.localScale = Vector3.zero;
+        text.DOFade(1, 0);
+        text.transform.DOScale(resultTextOriginalScale, 0.5f).SetEase(Ease.OutBack);
+        text.DOFade(0, 1f).SetDelay(3f);
     }
 
-    private void AnimateResultText()
+    private void HandleBackAndCloseButton()
     {
-        resultText.transform.localScale = Vector3.zero;
-        resultText.DOFade(1, 0);
-        resultText.transform.DOScale(resultTextOriginalScale, 0.5f).SetEase(Ease.OutBack);
-        resultText.DOFade(0, 1f).SetDelay(3f);
+        if (sumGamePanel.activeSelf)
+        {
+            ShowGameListPanel();
+        }
+        else
+        {
+            mainPanel.SetActive(false);
+        }
     }
 }
