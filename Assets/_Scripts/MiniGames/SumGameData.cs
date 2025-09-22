@@ -3,6 +3,13 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "SumGameData", menuName = "Mini Games/Sum Game Data")]
 public class SumGameData : ScriptableObject
 {
+    [Header("Liste Görünümü")]
+    [Tooltip("Oyunun seçim menüsünde görünecek adı.")]
+    public string gameName = "Sayı Toplama";
+
+    [Tooltip("Oyunun seçim menüsünde görünecek ikonu/resmi.")]
+    public Sprite gameIcon;
+
     [Header("Oyun Kuralları")]
     [Tooltip("Oyunu oynamanın maliyeti.")]
     public long costToPlay = 100;
