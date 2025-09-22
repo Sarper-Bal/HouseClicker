@@ -47,17 +47,29 @@ public class MiniGameUIController : MonoBehaviour
             resultTextOriginalScale = sumGameResultText.transform.localScale;
         }
 
-        // Başlangıçta panelleri kapalı tut
         gameListPanel.SetActive(false);
         sumGamePanel.SetActive(false);
     }
 
     private void OnEnable()
     {
-        // Panel her açıldığında listeyi yeniden oluştur ve doğru paneli göster.
-        PopulateGameList();
         ShowGameListPanel();
         if (listStatusText != null) listStatusText.text = "";
+
+        // --- SORUN 1 ÇÖZÜMÜ (DAHA SAĞLAM YÖNTEM) ---
+        StartCoroutine(RebuildListLayout());
+    }
+
+    private IEnumerator RebuildListLayout()
+    {
+        PopulateGameList();
+        // Bir sonraki frame'e kadar bekle. Bu, Unity'nin UI objelerini yaratmasına zaman tanır.
+        yield return new WaitForEndOfFrame();
+        // UI sistemini güncellemeyi zorla. Bu, VerticalLayoutGroup'un elemanları doğru çizmesini sağlar.
+        if (listContentParent != null)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(listContentParent as RectTransform);
+        }
     }
 
     private void PopulateGameList()
@@ -71,7 +83,7 @@ public class MiniGameUIController : MonoBehaviour
         {
             if (game.GameData == null)
             {
-                Debug.LogError($"HATA! '{game.gameObject.name}' objesindeki SumGame'in GameData'sı atanmamış! Lütfen Inspector'ı kontrol edin.", game.gameObject);
+                Debug.LogError($"HATA! '{game.gameObject.name}' objesindeki SumGame'in GameData'sı atanmamış! Lütfen Adım 2'yi uygulayın.", game.gameObject);
                 continue;
             }
 
@@ -80,17 +92,19 @@ public class MiniGameUIController : MonoBehaviour
             SumGameData data = game.GameData;
             string infoText = $"Maliyet: {data.costToPlay} / Ödül: {data.rewardOnWin}";
             listItem.Setup(data.gameIcon, data.gameName, infoText);
+
             listItem.AddClickListener(() => TryEnterGame(game));
         }
-
-        // --- SORUN 1 ÇÖZÜMÜ BURADA ---
-        // Liste dolduktan sonra, layout grubunu anında güncellemeye zorla.
-        LayoutRebuilder.ForceRebuildLayoutImmediate(listContentParent as RectTransform);
-        // -----------------------------
     }
 
     private void TryEnterGame(SumGame game)
     {
+        if (game.GameData == null)
+        {
+            Debug.LogError("Oyun Verisi (GameData) bulunamadığı için oyuna girilemiyor!");
+            return;
+        }
+
         if (CurrencyManager.Instance.CurrentGold >= game.GameData.costToPlay)
         {
             ShowSumGamePanel(game);
@@ -102,8 +116,6 @@ public class MiniGameUIController : MonoBehaviour
         }
     }
 
-    // ... Script'in geri kalanı bir öncekiyle aynı ...
-    #region Unchanged Methods
     private void ShowGameListPanel()
     {
         gameListPanel.SetActive(true);
@@ -131,9 +143,9 @@ public class MiniGameUIController : MonoBehaviour
 
     private void PlaySumGame()
     {
-        if (currentActiveGame == null)
+        if (currentActiveGame == null || currentActiveGame.GameData == null)
         {
-            Debug.LogError("Oynanacak aktif bir oyun seçilmemiş!");
+            Debug.LogError("HATA: Oynanacak oyunun verisi yüklenemedi!");
             return;
         }
 
@@ -141,6 +153,7 @@ public class MiniGameUIController : MonoBehaviour
 
         SumGameData data = currentActiveGame.GameData;
 
+        // Ödeme burada yapılır.
         CurrencyManager.Instance.SpendGold(data.costToPlay);
         MiniGameManager.Instance.RecordPlayTime(currentActiveGame.GameID);
 
@@ -203,5 +216,4 @@ public class MiniGameUIController : MonoBehaviour
             mainPanel.SetActive(false);
         }
     }
-    #endregion
 }

@@ -16,6 +16,6 @@ MonoBehaviour:
   gameIcon: {fileID: 21300000, guid: edb1fc13dc1ee7a44beeb4eb3a7e80c4, type: 3}
   costToPlay: 4
   rewardOnWin: 20
-  minNumber: 1
+  minNumber: 5
   maxNumber: 10
-  targetSum: 8
+  targetSum: 15
