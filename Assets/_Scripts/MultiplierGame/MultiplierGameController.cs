@@ -6,11 +6,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-// Struct yapısını Button referansını da içerecek şekilde güncelledik.
 [System.Serializable]
 public class MultiplierBox
 {
-    public Button boxButton; // Artık doğrudan Button bileşenini referans alıyoruz.
+    public Button boxButton;
     public TextMeshProUGUI multiplierText;
     [HideInInspector] public float assignedMultiplier;
 }
@@ -30,14 +29,13 @@ public class MultiplierGameController : MonoBehaviour
 
     private double currentWinnings;
     private bool isGameRunning = false;
-    private int boxesOpenedCount = 0; // Kaç kutunun açıldığını saymak için yeni değişken
+    private int boxesOpenedCount = 0;
 
     private void Start()
     {
         playButton.onClick.AddListener(StartGame);
         closeButton.onClick.AddListener(ClosePanel);
 
-        // Her bir kutu butonuna tıklandığında OnBoxClicked fonksiyonunu çağıracak şekilde ayarla
         foreach (var box in boxes)
         {
             box.boxButton.onClick.AddListener(() => OnBoxClicked(box));
@@ -73,10 +71,9 @@ public class MultiplierGameController : MonoBehaviour
 
         foreach (var box in boxes)
         {
-            // Kutuları başlangıç görünümüne getir
             box.boxButton.transform.localScale = Vector3.one;
             box.multiplierText.gameObject.SetActive(false);
-            box.boxButton.interactable = false; // Oyun başlayana kadar tıklanmasın
+            box.boxButton.interactable = false;
         }
 
         playButton.interactable = true;
@@ -95,11 +92,10 @@ public class MultiplierGameController : MonoBehaviour
         MiniGameManager.Instance.RecordPlayTime(gameData.gameName);
 
         currentWinnings = gameData.betAmount;
-        UpdateAmountText(gameData.betAmount);
+        UpdateAmountText(gameData.betAmount, true); // Başlangıç animasyonu için
 
         AssignMultipliersToBoxes();
 
-        // Kutuları tıklanabilir hale getir
         foreach (var box in boxes)
         {
             box.boxButton.interactable = true;
@@ -127,15 +123,13 @@ public class MultiplierGameController : MonoBehaviour
         }
     }
 
-    // Bir kutuya tıklandığında bu fonksiyon çalışır
     private void OnBoxClicked(MultiplierBox clickedBox)
     {
         if (!isGameRunning) return;
 
-        clickedBox.boxButton.interactable = false; // Tıklanan kutuyu tekrar tıklanmaz yap
+        clickedBox.boxButton.interactable = false;
         boxesOpenedCount++;
 
-        // Animasyon ve hesaplama işlemleri için yeni coroutine başlat
         StartCoroutine(RevealBox(clickedBox));
     }
 
@@ -143,47 +137,52 @@ public class MultiplierGameController : MonoBehaviour
     {
         float multiplier = boxToReveal.assignedMultiplier;
 
-        // Kutu açılma animasyonu
         Sequence revealAnim = DOTween.Sequence();
         revealAnim.Append(boxToReveal.boxButton.transform.DOPunchScale(Vector3.one * 0.2f, 0.3f));
         revealAnim.AppendCallback(() =>
         {
             boxToReveal.multiplierText.gameObject.SetActive(true);
+
+            // --- DEĞİŞİKLİK BURADA ---
             if (multiplier > 0)
             {
                 boxToReveal.multiplierText.text = $"x{multiplier}";
                 boxToReveal.multiplierText.color = Color.green;
             }
-            else
+            else // Negatif ise
             {
-                boxToReveal.multiplierText.text = $"÷{-multiplier}";
+                // Metni "-2x" formatında göster
+                boxToReveal.multiplierText.text = $"{multiplier}x";
                 boxToReveal.multiplierText.color = Color.red;
             }
+            // --- DEĞİŞİKLİK SONU ---
+
             boxToReveal.multiplierText.transform.localScale = Vector3.zero;
         });
         revealAnim.Append(boxToReveal.multiplierText.transform.DOScale(1f, 0.4f).SetEase(Ease.OutBack));
 
-        // Animasyonun bitmesini bekle
         yield return revealAnim.WaitForCompletion();
 
-        // Parayı güncelle
         double previousWinnings = currentWinnings;
-        if (multiplier > 0)
+        bool isPositive = multiplier > 0;
+
+        if (isPositive)
         {
             currentWinnings *= multiplier;
         }
         else
         {
+            // Negatif çarpanın değeri -2 ise 2'ye böl, -3 ise 3'e böl.
             currentWinnings /= -multiplier;
         }
 
-        // Para metninin animasyonlu değişimi
-        DOTween.To(() => previousWinnings, x => previousWinnings = x, currentWinnings, 0.5f)
-               .OnUpdate(() => UpdateAmountText(previousWinnings));
+        UpdateAmountText(currentWinnings, isPositive);
 
-        // Eğer tüm kutular açıldıysa oyunu bitir
+
         if (boxesOpenedCount >= boxes.Count)
         {
+            // Son kutudan sonra biraz bekleyip oyunu bitir.
+            yield return new WaitForSeconds(1.0f);
             FinishGame();
         }
     }
@@ -204,9 +203,23 @@ public class MultiplierGameController : MonoBehaviour
         ResetGame();
     }
 
-    private void UpdateAmountText(double amount)
+    // Metin güncelleme fonksiyonunu animasyonlu hale getirelim.
+    private void UpdateAmountText(double targetAmount, bool isPositiveChange = true)
     {
-        currentAmountText.text = ((long)System.Math.Round(amount)).ToString("N0");
+        double startAmount = double.Parse(currentAmountText.text, System.Globalization.NumberStyles.Any);
+
+        DOTween.To(() => startAmount, x => startAmount = x, targetAmount, 0.5f)
+               .OnUpdate(() => currentAmountText.text = ((long)System.Math.Round(startAmount)).ToString("N0"));
+
+        // Animasyonlu geri bildirim
+        if (isPositiveChange)
+        {
+            currentAmountText.transform.DOPunchScale(Vector3.one * 0.2f, 0.4f);
+        }
+        else
+        {
+            currentAmountText.transform.DOShakePosition(0.4f, new Vector3(10, 0, 0));
+        }
     }
 
     private void ClosePanel()
