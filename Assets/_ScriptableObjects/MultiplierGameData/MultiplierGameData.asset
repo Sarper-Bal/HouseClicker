@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: MultiplierGameData
   m_EditorClassIdentifier: Assembly-CSharp::MultiplierGameData
   gameName: "\xC7arpan Kutular\u0131"
-  betAmount: 10
+  baseBetAmount: 5
+  amountPerLevel: 5
   positiveMultipliers:
   - 1.5
   - 2

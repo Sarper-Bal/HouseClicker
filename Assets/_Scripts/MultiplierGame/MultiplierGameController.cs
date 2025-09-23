@@ -5,7 +5,7 @@ using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Globalization; // Sayı formatlama için eklendi
+using System.Globalization;
 
 [System.Serializable]
 public class MultiplierBox
@@ -44,6 +44,7 @@ public class MultiplierGameController : MonoBehaviour
     private double currentWinnings;
     private bool isGameRunning = false;
     private int boxesOpenedCount = 0;
+    private long currentBetAmount; // O anki oyunun maliyetini saklamak için
 
     private void Start()
     {
@@ -59,14 +60,21 @@ public class MultiplierGameController : MonoBehaviour
         mainPanel.SetActive(false);
     }
 
+    // YENİ FONKSİYON: O anki seviyeye göre bahis miktarını hesaplar.
+    private long GetCurrentBetAmount()
+    {
+        if (UpgradeManager.Instance == null)
+        {
+            Debug.LogError("UpgradeManager bulunamadı!");
+            return gameData.baseBetAmount;
+        }
+        int playerLevel = UpgradeManager.Instance.CurrentLevel;
+        return gameData.baseBetAmount + (playerLevel * gameData.amountPerLevel);
+    }
+
     public void ShowConfirmationPanel()
     {
-        if (CurrencyManager.Instance.CurrentGold < gameData.betAmount)
-        {
-            Debug.Log("Yetersiz Altın!");
-            return;
-        }
-
+        // Cooldown kontrolü burada kalmalı, çünkü bekleme süresindeyse panel hiç açılmamalı.
         float cooldown = MiniGameManager.Instance.GetRemainingCooldown(gameData.gameName);
         if (cooldown > 0)
         {
@@ -74,30 +82,48 @@ public class MultiplierGameController : MonoBehaviour
             return;
         }
 
+        // DEĞİŞİKLİK: Para kontrolü buradan kaldırıldı. Panel artık her zaman açılacak.
+
         mainPanel.SetActive(true);
         confirmationPanel.SetActive(true);
         gameplayPanel.SetActive(false);
         resultPanel.SetActive(false);
 
         gameNameText.text = gameData.gameName;
-        // --- DEĞİŞİKLİK BURADA ---
-        betInfoText.text = gameData.betAmount.ToString("N0", CultureInfo.InvariantCulture);
+
+        // O anki bahis miktarını hesapla
+        currentBetAmount = GetCurrentBetAmount();
+        betInfoText.text = currentBetAmount.ToString("N0", CultureInfo.InvariantCulture);
+
+        // DEĞİŞİKLİK: Para kontrolünü burada yapıp butonu ayarla.
+        if (CurrencyManager.Instance.CurrentGold >= currentBetAmount)
+        {
+            startGameButton.interactable = true;
+            betInfoText.color = Color.white; // Parası yeterliyse metin rengi normal
+        }
+        else
+        {
+            startGameButton.interactable = false;
+            betInfoText.color = Color.red; // Parası yetersizse kırmızı renk ile belirt
+        }
     }
 
     private void StartGame()
     {
+        // Oyna butonuna basıldığında maliyet yeniden hesaplanıp düşülür.
+        currentBetAmount = GetCurrentBetAmount();
+
         confirmationPanel.SetActive(false);
         gameplayPanel.SetActive(true);
 
-        if (isGameRunning) return;
         isGameRunning = true;
         boxesOpenedCount = 0;
 
-        CurrencyManager.Instance.SpendGold(gameData.betAmount);
+        CurrencyManager.Instance.SpendGold(currentBetAmount);
         MiniGameManager.Instance.RecordPlayTime(gameData.gameName);
 
-        currentWinnings = gameData.betAmount;
-        UpdateAmountText(gameData.betAmount, true);
+        currentWinnings = currentBetAmount;
+        UpdateAmountText(currentBetAmount, true);
 
         AssignMultipliersToBoxes();
         ResetBoxVisuals();
@@ -170,11 +196,11 @@ public class MultiplierGameController : MonoBehaviour
         gameplayPanel.SetActive(false);
         resultPanel.SetActive(true);
 
-        // --- DEĞİŞİKLİK BURADA ---
-        betResultText.text = gameData.betAmount.ToString("N0", CultureInfo.InvariantCulture);
+        // Sonuç panelinde de o anki oyun maliyetini göster
+        betResultText.text = currentBetAmount.ToString("N0", CultureInfo.InvariantCulture);
         winningsResultText.text = finalWinnings.ToString("N0", CultureInfo.InvariantCulture);
 
-        if (finalWinnings >= gameData.betAmount)
+        if (finalWinnings >= currentBetAmount)
         {
             winningsResultText.color = Color.green;
         }
@@ -214,7 +240,6 @@ public class MultiplierGameController : MonoBehaviour
 
     private void UpdateAmountText(double targetAmount, bool isPositiveChange = true)
     {
-        // Başlangıç değerini alırken hata oluşmaması için TryParse kullanalım
         double.TryParse(currentAmountText.text, NumberStyles.Any, CultureInfo.InvariantCulture, out double startAmount);
 
         DOTween.To(() => startAmount, x => startAmount = x, targetAmount, 0.5f)
