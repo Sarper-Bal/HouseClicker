@@ -1,27 +1,22 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic; // List kullanmak için
-using DG.Tweening; // Sonradan eklenen satır
+using System.Collections.Generic;
 
 public class ShopController : MonoBehaviour
 {
     [Header("Mağaza Ayarları")]
-    [Tooltip("Mağazada satılacak tüm askerlerin ScriptableObject listesi.")]
     [SerializeField] private List<SoldierData> soldiersToSell;
 
     [Header("UI Elemanları")]
     [SerializeField] private GameObject shopPanel;
     [SerializeField] private Button closeButton;
-    [SerializeField] private TextMeshProUGUI currentSoldiersText;
+    [SerializeField] private TextMeshProUGUI totalSoldiersText; // "Toplam Asker" metni
 
     [Header("Liste Yapısı")]
-    [Tooltip("Mağaza ürünlerinin (ShopItem_Prefab) içine oluşturulacağı parent obje.")]
     [SerializeField] private Transform contentParent;
-    [Tooltip("Tek bir mağaza ürününü temsil eden prefab.")]
     [SerializeField] private GameObject shopItemPrefab;
 
-    // Oluşturulan tüm ShopItemUI'ları takip etmek için bir liste
     private List<ShopItemUI> spawnedShopItems = new List<ShopItemUI>();
 
     private void Start()
@@ -34,38 +29,40 @@ public class ShopController : MonoBehaviour
     {
         shopPanel.SetActive(true);
         PopulateShop();
-        UpdateCurrentSoldierCount();
+        UpdateTotalSoldierCount();
     }
 
     private void OnEnable()
     {
         if (SoldierManager.Instance != null)
-            SoldierManager.Instance.OnSoldierDataChanged += UpdateCurrentSoldierCount;
+            SoldierManager.Instance.OnSoldierDataChanged += OnSoldierDataChanged;
         if (CurrencyManager.Instance != null)
-            CurrencyManager.Instance.OnGoldChanged += UpdateAllButtonStates; // Bu satır hataya neden oluyordu
+            CurrencyManager.Instance.OnGoldChanged += UpdateAllButtonStates;
     }
 
     private void OnDisable()
     {
         if (SoldierManager.Instance != null)
-            SoldierManager.Instance.OnSoldierDataChanged -= UpdateCurrentSoldierCount;
+            SoldierManager.Instance.OnSoldierDataChanged -= OnSoldierDataChanged;
         if (CurrencyManager.Instance != null)
             CurrencyManager.Instance.OnGoldChanged -= UpdateAllButtonStates;
     }
 
-    /// <summary>
-    /// Mağazayı, listedeki askerlerle dinamik olarak doldurur.
-    /// </summary>
+    // Asker verisi değiştiğinde hem toplamı hem de bireysel sayıları günceller.
+    private void OnSoldierDataChanged()
+    {
+        UpdateTotalSoldierCount();
+        UpdateAllOwnedCounts();
+    }
+
     private void PopulateShop()
     {
-        // Önce eski listeyi temizle
         foreach (Transform child in contentParent)
         {
             Destroy(child.gameObject);
         }
         spawnedShopItems.Clear();
 
-        // soldiersToSell listesindeki her bir asker için yeni bir UI elemanı oluştur
         foreach (SoldierData soldier in soldiersToSell)
         {
             GameObject itemGO = Instantiate(shopItemPrefab, contentParent);
@@ -73,16 +70,12 @@ public class ShopController : MonoBehaviour
 
             if (shopItem != null)
             {
-                // ShopItemUI'ı ayarla ve satın alma eylemini (BuySoldier) ona bağla
                 shopItem.Setup(soldier, BuySoldier);
                 spawnedShopItems.Add(shopItem);
             }
         }
     }
 
-    /// <summary>
-    /// Bir ShopItemUI tarafından çağrıldığında ilgili askeri satın alır.
-    /// </summary>
     private void BuySoldier(SoldierData soldierToBuy)
     {
         if (CurrencyManager.Instance == null || SoldierManager.Instance == null) return;
@@ -91,26 +84,28 @@ public class ShopController : MonoBehaviour
         if (CurrencyManager.Instance.CurrentGold >= cost)
         {
             CurrencyManager.Instance.SpendGold(cost);
-            SoldierManager.Instance.AddSoldiers(1, soldierToBuy.health, soldierToBuy.attack);
+            // Artık AddSoldiers yerine AddSoldier kullanıyoruz ve SoldierData'yı gönderiyoruz.
+            SoldierManager.Instance.AddSoldier(soldierToBuy);
         }
     }
 
-    /// <summary>
-    /// Mevcut asker sayısını günceller.
-    /// </summary>
-    private void UpdateCurrentSoldierCount()
+    private void UpdateTotalSoldierCount()
     {
         if (SoldierManager.Instance != null)
         {
-            currentSoldiersText.text = SoldierManager.Instance.TotalSoldiers.ToString();
+            totalSoldiersText.text = SoldierManager.Instance.GetTotalSoldierCount().ToString();
         }
     }
 
-    // --- HATA DÜZELTMESİ BURADA ---
-    // Fonksiyon artık OnGoldChanged event'inden gelen 'long' parametresini kabul ediyor.
-    /// <summary>
-    /// Listedeki tüm ürünlerin buton durumunu günceller.
-    /// </summary>
+    // YENİ FONKSİYON: Listedeki tüm ürünlerin sahip olunan asker sayısını günceller.
+    private void UpdateAllOwnedCounts()
+    {
+        foreach (var item in spawnedShopItems)
+        {
+            item.UpdateOwnedCount();
+        }
+    }
+
     private void UpdateAllButtonStates(long newGoldAmount)
     {
         foreach (var item in spawnedShopItems)
@@ -118,7 +113,6 @@ public class ShopController : MonoBehaviour
             item.UpdateButtonState();
         }
     }
-    // --- DÜZELTME SONU ---
 
     private void ClosePanel()
     {
