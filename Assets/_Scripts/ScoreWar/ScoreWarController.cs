@@ -7,14 +7,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
 
-// Her bir kutunun UI elemanlarını ve değerini bir arada tutmak için
 [System.Serializable]
 public class ScoreBox
 {
     public GameObject boxObject;
     public TextMeshProUGUI modifierText;
     [HideInInspector] public float modifierValue;
-    [HideInInspector] public bool isMultiplier; // Değer çarpan mı yoksa eklenen mi?
+    [HideInInspector] public bool isMultiplier;
 }
 
 public class ScoreWarController : MonoBehaviour
@@ -39,23 +38,52 @@ public class ScoreWarController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI enemyScoreText;
     [SerializeField] private List<ScoreBox> playerBoxes;
     [SerializeField] private List<ScoreBox> enemyBoxes;
-    [SerializeField] private TextMeshProUGUI turnIndicatorText; // Sıranın kimde olduğunu gösteren metin
+    [SerializeField] private TextMeshProUGUI turnIndicatorText;
+
+    [Header("Görsel Efektler")]
+    [SerializeField] private Transform playerSpriteTransform;
+    [SerializeField] private Transform enemySpriteTransform;
+    [SerializeField] private float minSpriteScale = 0.6f;
+    [SerializeField] private float maxSpriteScale = 2.0f;
 
     [Header("Sonuç Paneli UI")]
-    [SerializeField] private TextMeshProUGUI resultTitleText; // "Kazandın!", "Kaybettin!"
-    [SerializeField] private TextMeshProUGUI resultInfoText; // "Ödül: 500 Altın"
+    [SerializeField] private TextMeshProUGUI resultTitleText;
+    [SerializeField] private TextMeshProUGUI resultInfoText;
     [SerializeField] private Button finishAndCloseButton;
 
     private float playerScore;
     private float enemyScore;
     private long currentBetAmount;
+    private Vector3 initialPlayerScale;
+    private Vector3 initialEnemyScale;
+
+    // --- YENİ EKLENEN KISIM ---
+    // Kutuların orijinal boyutlarını saklamak için bir Dictionary
+    private Dictionary<GameObject, Vector3> initialBoxScales = new Dictionary<GameObject, Vector3>();
+    // --- YENİ KISIM SONU ---
+
+    private void Awake()
+    {
+        if (playerSpriteTransform != null) initialPlayerScale = playerSpriteTransform.localScale;
+        if (enemySpriteTransform != null) initialEnemyScale = enemySpriteTransform.localScale;
+
+        // --- YENİ EKLENEN KISIM ---
+        // Oyuna başlamadan önce TÜM kutuların orijinal boyutlarını hafızaya al
+        foreach (var box in playerBoxes.Concat(enemyBoxes))
+        {
+            if (box.boxObject != null && !initialBoxScales.ContainsKey(box.boxObject))
+            {
+                initialBoxScales.Add(box.boxObject, box.boxObject.transform.localScale);
+            }
+        }
+        // --- YENİ KISIM SONU ---
+    }
 
     private void Start()
     {
         startGameButton.onClick.AddListener(StartGame);
         closeButton.onClick.AddListener(CloseMainPanel);
         finishAndCloseButton.onClick.AddListener(CloseMainPanel);
-
         mainPanel.SetActive(false);
     }
 
@@ -110,23 +138,22 @@ public class ScoreWarController : MonoBehaviour
         UpdateScoreText(playerScoreText, playerScore, false);
         UpdateScoreText(enemyScoreText, enemyScore, false);
 
+        UpdateSpriteScale(playerSpriteTransform, playerScore, initialPlayerScale);
+        UpdateSpriteScale(enemySpriteTransform, enemyScore, initialEnemyScale);
+
         AssignModifiers();
-        ResetBoxVisuals();
+        ResetBoxVisuals(); // Bu fonksiyon artık doğru boyutları kullanacak
 
         StartCoroutine(DuelSequence());
     }
 
     private void AssignModifiers()
     {
-        // Tüm değerleri bir havuzda topla
         List<float> availableModifiers = new List<float>();
-        availableModifiers.AddRange(gameData.additiveModifiers.Select(v => (float)v)); // int'leri float'a çevir
+        availableModifiers.AddRange(gameData.additiveModifiers.Select(v => (float)v));
         availableModifiers.AddRange(gameData.multiplicativeModifiers);
-
-        // Havuzu karıştır
         var shuffled = availableModifiers.OrderBy(x => Random.value).ToList();
 
-        // 4 kutuya ata
         for (int i = 0; i < 2; i++)
         {
             AssignRandomModifier(playerBoxes[i], shuffled);
@@ -136,14 +163,10 @@ public class ScoreWarController : MonoBehaviour
 
     private void AssignRandomModifier(ScoreBox box, List<float> shuffledModifiers)
     {
-        if (shuffledModifiers.Count == 0) return; // Havuz boşsa ata'ma
-
+        if (shuffledModifiers.Count == 0) return;
         float modifier = shuffledModifiers[0];
-        shuffledModifiers.RemoveAt(0); // Atanan değeri havuzdan çıkar
-
+        shuffledModifiers.RemoveAt(0);
         box.modifierValue = modifier;
-        // Değerin 1'den büyük veya -1'den küçük olması onun çarpan olduğunu gösterir (Örn: 2, -2). 
-        // 10, 20, -5 gibi değerler ise eklemelidir.
         box.isMultiplier = Mathf.Abs(modifier) > 1 && Mathf.Abs(modifier) < 10;
     }
 
@@ -152,29 +175,25 @@ public class ScoreWarController : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         turnIndicatorText.text = "Senin Sıran";
-        turnIndicatorText.transform.DOPunchScale(Vector3.one * 0.1f, 0.3f);
-        yield return RevealBox(playerBoxes[0], playerScoreText, (newScore) => playerScore = newScore);
+        yield return RevealBox(playerBoxes[0], playerScoreText, playerSpriteTransform, initialPlayerScale, (newScore) => playerScore = newScore);
         yield return new WaitForSeconds(1.5f);
 
         turnIndicatorText.text = "Rakip Sırası";
-        turnIndicatorText.transform.DOPunchScale(Vector3.one * 0.1f, 0.3f);
-        yield return RevealBox(enemyBoxes[0], enemyScoreText, (newScore) => enemyScore = newScore);
+        yield return RevealBox(enemyBoxes[0], enemyScoreText, enemySpriteTransform, initialEnemyScale, (newScore) => enemyScore = newScore);
         yield return new WaitForSeconds(1.5f);
 
         turnIndicatorText.text = "Senin Sıran";
-        turnIndicatorText.transform.DOPunchScale(Vector3.one * 0.1f, 0.3f);
-        yield return RevealBox(playerBoxes[1], playerScoreText, (newScore) => playerScore = newScore);
+        yield return RevealBox(playerBoxes[1], playerScoreText, playerSpriteTransform, initialPlayerScale, (newScore) => playerScore = newScore);
         yield return new WaitForSeconds(1.5f);
 
         turnIndicatorText.text = "Rakip Sırası";
-        turnIndicatorText.transform.DOPunchScale(Vector3.one * 0.1f, 0.3f);
-        yield return RevealBox(enemyBoxes[1], enemyScoreText, (newScore) => enemyScore = newScore);
+        yield return RevealBox(enemyBoxes[1], enemyScoreText, enemySpriteTransform, initialEnemyScale, (newScore) => enemyScore = newScore);
         yield return new WaitForSeconds(2f);
 
         FinishGame();
     }
 
-    private IEnumerator RevealBox(ScoreBox box, TextMeshProUGUI scoreText, System.Action<float> updateScoreAction)
+    private IEnumerator RevealBox(ScoreBox box, TextMeshProUGUI scoreText, Transform spriteTransform, Vector3 initialScale, System.Action<float> updateScoreAction)
     {
         float currentScore = (scoreText == playerScoreText) ? playerScore : enemyScore;
 
@@ -184,14 +203,8 @@ public class ScoreWarController : MonoBehaviour
         {
             box.modifierText.gameObject.SetActive(true);
             string text = "";
-            if (box.isMultiplier)
-            {
-                text = box.modifierValue > 0 ? $"x{box.modifierValue}" : $"÷{-box.modifierValue}";
-            }
-            else
-            {
-                text = box.modifierValue > 0 ? $"+{box.modifierValue}" : $"{box.modifierValue}";
-            }
+            if (box.isMultiplier) text = box.modifierValue > 0 ? $"x{box.modifierValue}" : $"÷{-box.modifierValue}";
+            else text = box.modifierValue > 0 ? $"+{box.modifierValue}" : $"{box.modifierValue}";
             box.modifierText.text = text;
             box.modifierText.color = box.modifierValue > 0 ? Color.green : Color.red;
             box.modifierText.transform.localScale = Vector3.zero;
@@ -201,17 +214,12 @@ public class ScoreWarController : MonoBehaviour
         yield return revealAnim.WaitForCompletion();
 
         float newScore;
-        if (box.isMultiplier)
-        {
-            newScore = box.modifierValue > 0 ? currentScore * box.modifierValue : currentScore / -box.modifierValue;
-        }
-        else
-        {
-            newScore = currentScore + box.modifierValue;
-        }
+        if (box.isMultiplier) newScore = box.modifierValue > 0 ? currentScore * box.modifierValue : currentScore / -box.modifierValue;
+        else newScore = currentScore + box.modifierValue;
 
         updateScoreAction(newScore);
         UpdateScoreText(scoreText, newScore, true);
+        UpdateSpriteScale(spriteTransform, newScore, initialScale);
     }
 
     private void FinishGame()
@@ -234,10 +242,7 @@ public class ScoreWarController : MonoBehaviour
         {
             title = "Berabere!";
             info = "Bahis İade Edildi";
-            if (gameData.refundOnDraw)
-            {
-                CurrencyManager.Instance.AddGold(currentBetAmount);
-            }
+            if (gameData.refundOnDraw) CurrencyManager.Instance.AddGold(currentBetAmount);
         }
 
         ShowResultPanel(title, info);
@@ -260,29 +265,34 @@ public class ScoreWarController : MonoBehaviour
     {
         foreach (var box in playerBoxes.Concat(enemyBoxes))
         {
-            box.boxObject.transform.localScale = Vector3.one;
+            // --- DEĞİŞİKLİK BURADA ---
+            // Artık boyutu (1,1,1)'e değil, hafızaya aldığımız orijinal boyutuna sıfırlıyoruz.
+            if (initialBoxScales.ContainsKey(box.boxObject))
+            {
+                box.boxObject.transform.localScale = initialBoxScales[box.boxObject];
+            }
+            // --- DEĞİŞİKLİK SONU ---
             box.modifierText.gameObject.SetActive(false);
         }
     }
 
     private void UpdateScoreText(TextMeshProUGUI textElement, float targetScore, bool animate)
     {
-        float startScore = 0;
-        if (animate)
-        {
-            float.TryParse(textElement.text, NumberStyles.Any, CultureInfo.InvariantCulture, out startScore);
-        }
-        else
-        {
-            startScore = targetScore;
-        }
+        float startScore = animate ? float.Parse(textElement.text, CultureInfo.InvariantCulture) : targetScore;
 
         DOTween.To(() => startScore, x => startScore = x, targetScore, 0.5f)
                .OnUpdate(() => textElement.text = Mathf.RoundToInt(startScore).ToString());
 
-        if (animate)
-        {
-            textElement.transform.DOPunchScale(Vector3.one * 0.3f, 0.4f);
-        }
+        if (animate) textElement.transform.DOPunchScale(Vector3.one * 0.3f, 0.4f);
+    }
+
+    private void UpdateSpriteScale(Transform spriteTransform, float score, Vector3 initialScale)
+    {
+        if (spriteTransform == null) return;
+
+        float scaleFactor = score / gameData.startScore;
+        scaleFactor = Mathf.Clamp(scaleFactor, minSpriteScale, maxSpriteScale);
+        Vector3 newScale = initialScale * scaleFactor;
+        spriteTransform.DOScale(newScale, 0.5f).SetEase(Ease.OutQuad);
     }
 }
