@@ -16,6 +16,6 @@ MonoBehaviour:
   upgradeCost: 10
   goldPerClick: 5
   goldPerSecond: 5
-  houseSprite: {fileID: 21300000, guid: 44648eb34fc5b4544ba1bfdd089295a6, type: 3}
+  houseSprite: {fileID: 21300000, guid: 9d6f817bb3a2d45028c5720b5a27eb22, type: 3}
   cosmeticObjectsToShow:
   - Well3_1
