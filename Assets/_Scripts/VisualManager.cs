@@ -1,22 +1,20 @@
 using UnityEngine;
-using DG.Tweening; // Animasyonlar için DOTween kütüphanesi
-using System.Collections.Generic; // Dictionary kullanmak için
-using System.Linq; // FindObjectsOfType'ı kolay kullanmak için
+using DG.Tweening;
+using System.Collections.Generic;
+using System.Linq;
 
 public class VisualManager : MonoBehaviour
 {
     [Header("Object References")]
-    [Tooltip("Görseli değiştirilecek olan ana evin SpriteRenderer'ını buraya sürükleyin.")]
     [SerializeField] private SpriteRenderer houseSpriteRenderer;
 
     [Header("Animation Settings")]
-    [Tooltip("Sprite değişimi sırasında ne kadar sürecek bir kararma/belirme efekti olsun?")]
     [SerializeField] private float spriteTransitionDuration = 0.25f;
-    [Tooltip("Kozmetik objeler belirirken ne kadar sürede büyüsün?")]
     [SerializeField] private float cosmeticAppearDuration = 0.5f;
 
     private Dictionary<string, CosmeticObject> cosmeticObjectMap;
     private Dictionary<string, Vector3> cosmeticObjectInitialScales;
+    private Sequence transitionSequence; // Animasyonu takip etmek için bir değişken
 
     private void Awake()
     {
@@ -40,12 +38,7 @@ public class VisualManager : MonoBehaviour
     {
         if (UpgradeManager.Instance != null)
         {
-            // Gelecekteki seviye atlamaları için event'e abone ol.
             UpgradeManager.Instance.OnLevelUp += HandleLevelUp;
-
-            // --- ÇÖZÜM BURADA ---
-            // Oyuna başlarken, anonsu kaçırma ihtimaline karşı mevcut yüklü seviye ne ise
-            // görselleri ona göre GÜNCELLE. Bu, başlangıç senkronizasyonunu sağlar.
             HandleLevelUp(UpgradeManager.Instance.GetCurrentLevelData());
         }
     }
@@ -56,9 +49,16 @@ public class VisualManager : MonoBehaviour
         {
             UpgradeManager.Instance.OnLevelUp -= HandleLevelUp;
         }
+
+        // --- DEĞİŞİKLİK BURADA ---
+        // Bu obje yok olmadan önce, çalışan sprite geçiş animasyonunu durdur.
+        if (transitionSequence != null)
+        {
+            transitionSequence.Kill();
+        }
+        // --- DEĞİŞİKLİK SONU ---
     }
 
-    // Bu fonksiyon hem oyun başlangıcında hem de seviye atlandığında çalışacak.
     private void HandleLevelUp(LevelData newLevelData)
     {
         if (newLevelData == null)
@@ -74,12 +74,13 @@ public class VisualManager : MonoBehaviour
     {
         if (houseSpriteRenderer == null) return;
 
-        // Sprite null ise veya zaten aynı sprite ise işlem yapma.
-        // Başlangıçta aynı sprite olsa bile kozmetik objelerin güncellenmesi için devam etmesi gerekiyor,
-        // bu yüzden bu kontrolü daha spesifik hale getirelim.
         if (newLevelData.houseSprite != null && houseSpriteRenderer.sprite != newLevelData.houseSprite)
         {
-            Sequence transitionSequence = DOTween.Sequence();
+            // Önceki animasyon çalışıyorsa onu durdur
+            if (transitionSequence != null) transitionSequence.Kill();
+
+            // Yeni animasyonu başlat ve değişkene ata
+            transitionSequence = DOTween.Sequence();
             transitionSequence.Append(houseSpriteRenderer.DOFade(0, spriteTransitionDuration));
             transitionSequence.AppendCallback(() => houseSpriteRenderer.sprite = newLevelData.houseSprite);
             transitionSequence.Append(houseSpriteRenderer.DOFade(1, spriteTransitionDuration));
@@ -102,8 +103,6 @@ public class VisualManager : MonoBehaviour
                 GameObject objToShow = cosmeticObjectMap[idToShow].gameObject;
                 Vector3 initialScale = cosmeticObjectInitialScales[idToShow];
 
-                // Eğer obje zaten aktifse animasyon yapma, sadece orada kalsın.
-                // Bu, oyun başlangıcında her şeyin sıfırdan büyümesini engeller.
                 if (objToShow.activeSelf) continue;
 
                 objToShow.SetActive(true);

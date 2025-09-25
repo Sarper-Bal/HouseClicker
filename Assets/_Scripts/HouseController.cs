@@ -13,14 +13,27 @@ public class HouseController : MonoBehaviour, IPointerDownHandler
     private Sequence clickSequence;
     private SpriteRenderer houseSpriteRenderer;
     private Vector3 originalScale;
-    private Color originalColor; // Saydamlık hatasını çözmek için
+    private Color originalColor;
 
     private void Awake()
     {
         houseSpriteRenderer = GetComponent<SpriteRenderer>();
         originalScale = transform.localScale;
-        originalColor = houseSpriteRenderer.color; // Orijinal rengi hafızaya al
+        originalColor = houseSpriteRenderer.color;
     }
+
+    // --- YENİ EKLENEN FONKSİYON ---
+    // Bu obje (ve sahne) yok olmadan hemen önce çalışır.
+    private void OnDestroy()
+    {
+        // Çalışan bir animasyon varsa, sahne değişmeden önce onu güvenli bir şekilde durdur.
+        // Bu, "missing target" hatasını çözecektir.
+        if (clickSequence != null)
+        {
+            clickSequence.Kill();
+        }
+    }
+    // --- YENİ KISIM SONU ---
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -30,7 +43,7 @@ public class HouseController : MonoBehaviour, IPointerDownHandler
         }
 
         HandleGameplayLogic();
-        PlayExaggeratedClickAnimation(); // Yeni animasyon fonksiyonunu çağırıyoruz
+        PlayExaggeratedClickAnimation();
     }
 
     private void HandleGameplayLogic()
@@ -51,29 +64,19 @@ public class HouseController : MonoBehaviour, IPointerDownHandler
         }
     }
 
-    // Abartılı Animasyon Sekansı
     private void PlayExaggeratedClickAnimation()
     {
         clickSequence = DOTween.Sequence();
 
-        // 1. ADIM: Güçlü Vuruş ve Beklenti
-        // Ev daha da belirgin bir şekilde ezilir ve parlak flaş patlar.
         clickSequence.Append(transform.DOScale(originalScale * 0.8f, 0.07f));
         clickSequence.Join(houseSpriteRenderer.DOColor(Color.white, 0.07f));
 
-        // 2. ADIM: Şok Dalgası ve Zıplama
         clickSequence.AppendCallback(CreateShockwave);
-        // Ev yukarı doğru hafifçe zıplasın ve geri konsun.
         clickSequence.Join(transform.DOPunchPosition(Vector3.up * 0.2f, 0.4f, 1, 0.5f));
 
-        // 3. ADIM: Geri Esneme ve Sarsıntı
-        // Ev, daha abartılı bir şekilde esneyerek orijinal boyutuna döner.
         clickSequence.Append(transform.DOScale(originalScale, 0.5f).SetEase(Ease.OutElastic));
-        // Geri dönerken bir yandan da ekseni etrafında sarsılsın.
         clickSequence.Join(transform.DOPunchRotation(new Vector3(0, 0, 8f), 0.5f, 15, 1));
 
-        // 4. ADIM: Rengin Normale Dönmesi (Hata Düzeltmesi)
-        // Rengi, hafızadaki orijinal renge dönmeye zorlayarak saydamlık hatasını çözüyoruz.
         clickSequence.Join(houseSpriteRenderer.DOColor(originalColor, 0.4f));
     }
 

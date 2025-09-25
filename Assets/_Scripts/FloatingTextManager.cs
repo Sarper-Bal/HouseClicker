@@ -1,28 +1,28 @@
 using UnityEngine;
-using TMPro; // TextMeshPro kullanacağımız için
-using DG.Tweening; // DOTween animasyonları için
+using TMPro;
+using DG.Tweening;
 
 public class FloatingTextManager : MonoBehaviour
 {
     [Header("Genel Ayarlar")]
-    [SerializeField] private GameObject floatingTextPrefab; // Metin prefab'ı
-    [SerializeField] private Canvas mainCanvas; // Bütün UI'ın bulunduğu ana Canvas
+    [SerializeField] private GameObject floatingTextPrefab;
+    [SerializeField] private Canvas mainCanvas;
 
     [Header("Tıklama Metni Ayarları")]
-    [SerializeField] private Transform clickSpawnPoint; // Tıklama metinlerinin doğacağı dünya konumu
+    [SerializeField] private Transform clickSpawnPoint;
     [SerializeField] private Color clickTextColor = Color.yellow;
 
     [Header("Pasif Gelir Metni Ayarları")]
-    [SerializeField] private Transform passiveSpawnPoint; // Pasif gelir metinlerinin doğacağı dünya konumu
+    [SerializeField] private Transform passiveSpawnPoint;
     [SerializeField] private Color passiveTextColor = Color.white;
 
     [Header("Animasyon Ayarları")]
-    [SerializeField] private float moveDistance = 150f; // Metnin yukarı doğru gideceği mesafe (piksel cinsinden)
-    [SerializeField] private float duration = 1.5f; // Animasyonun süresi
+    [SerializeField] private float moveDistance = 150f;
+    [SerializeField] private float duration = 1.5f;
 
     void Start()
     {
-        // Event'lere abone oluyoruz
+        // Bu script (ve MainScene) yüklendiğinde event'leri dinlemeye başla
         if (HouseController.FindObjectOfType<HouseController>() != null)
         {
             HouseController.FindObjectOfType<HouseController>().OnClickedForGold += HandleClickIncome;
@@ -36,7 +36,7 @@ public class FloatingTextManager : MonoBehaviour
 
     void OnDestroy()
     {
-        // Event aboneliklerini iptal ediyoruz
+        // Bu script (ve MainScene) yok edildiğinde event'leri dinlemeyi bırak
         if (HouseController.FindObjectOfType<HouseController>() != null)
         {
             HouseController.FindObjectOfType<HouseController>().OnClickedForGold -= HandleClickIncome;
@@ -45,41 +45,43 @@ public class FloatingTextManager : MonoBehaviour
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.OnPassiveGoldAdded -= HandlePassiveIncome;
+            // CurrencyManager.Instance.StopPassiveIncome(); satırı buradan kaldırıldı.
         }
     }
 
     private void HandleClickIncome(long amount)
     {
+        if (clickSpawnPoint == null) return;
         ShowFloatingText($"+{amount}", clickSpawnPoint.position, clickTextColor);
     }
 
     private void HandlePassiveIncome(long amount)
     {
+        if (passiveSpawnPoint == null) return;
         ShowFloatingText($"+{amount}", passiveSpawnPoint.position, passiveTextColor);
     }
 
     private void ShowFloatingText(string message, Vector3 worldPosition, Color color)
     {
-        // 1. Dünya konumunu ekran konumuna çevir
+        if (mainCanvas == null || floatingTextPrefab == null) return;
+
         Vector2 screenPosition = Camera.main.WorldToScreenPoint(worldPosition);
 
-        // 2. Prefab'dan yeni bir metin objesi yarat (Instantiate)
         GameObject textObject = Instantiate(floatingTextPrefab, mainCanvas.transform);
         textObject.transform.position = screenPosition;
 
-        // 3. Metin ve renk ayarlarını yap
         TextMeshProUGUI tmpText = textObject.GetComponent<TextMeshProUGUI>();
         tmpText.text = message;
         tmpText.color = color;
 
-        // 4. Animasyonu başlat ve bitince objeyi yok et (Destroy)
-        tmpText.alpha = 1;
         Sequence sequence = DOTween.Sequence();
         sequence.Append(textObject.transform.DOMoveY(screenPosition.y + moveDistance, duration).SetEase(Ease.OutQuad));
         sequence.Join(tmpText.DOFade(0, duration).SetEase(Ease.InQuad));
+        sequence.SetLink(textObject);
         sequence.OnComplete(() =>
         {
-            Destroy(textObject);
+            if (textObject != null)
+                Destroy(textObject);
         });
     }
 }

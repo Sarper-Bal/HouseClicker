@@ -6,6 +6,9 @@ public class CurrencyManager : MonoBehaviour
 {
     public static CurrencyManager Instance { get; private set; }
 
+    // Coroutine'i durdurma ile ilgili tüm kodlar kaldırıldı.
+    // private Coroutine passiveIncomeCoroutine;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -21,17 +24,17 @@ public class CurrencyManager : MonoBehaviour
 
     public long CurrentGold { get; private set; }
     public event Action<long> OnGoldChanged;
-
-    // --- YENİ EKLENEN EVENT ---
-    // FloatingTextManager'ın dinleyeceği sinyal.
     public event Action<long> OnPassiveGoldAdded;
-    // -------------------------
 
     private void Start()
     {
         LoadGold();
+        // Pasif gelir görevini sadece bir kez, oyunun en başında başlatıyoruz.
+        // Artık bir değişkene atamaya veya durdurmaya gerek yok.
         StartCoroutine(PassiveIncomeCoroutine());
     }
+
+    // StopPassiveIncome() fonksiyonu buradan kaldırıldı.
 
     private IEnumerator PassiveIncomeCoroutine()
     {
@@ -39,18 +42,16 @@ public class CurrencyManager : MonoBehaviour
         {
             yield return new WaitForSeconds(1f);
 
+            // Oyuncunun hangi sahnede olduğunu kontrol etmemize gerek yok.
+            // Bu coroutine her zaman çalışacak ve altın ekleyecek.
             if (UpgradeManager.Instance != null)
             {
                 LevelData currentLevelData = UpgradeManager.Instance.GetCurrentLevelData();
                 if (currentLevelData != null && currentLevelData.goldPerSecond > 0)
                 {
                     long passiveAmount = currentLevelData.goldPerSecond;
-
-                    // --- EVENT'İ TETİKLE ---
-                    // Pasif geliri ekleyeceğimizi haber veriyoruz.
+                    // Sinyali gönder. Eğer dinleyen (FloatingTextManager) varsa çalışır, yoksa görmezden gelinir.
                     OnPassiveGoldAdded?.Invoke(passiveAmount);
-                    // -------------------------
-
                     AddGold(passiveAmount);
                 }
             }

@@ -12,13 +12,14 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TextMeshProUGUI upgradeButtonText;
 
-    // --- YENİDEN EKLENEN KISIM ---
     [Header("Panel References")]
-    [Tooltip("İçinde tüm mini oyunların bulunduğu ana panel.")]
     [SerializeField] private GameObject miniGamesMainPanel;
-    [Tooltip("Yukarıdaki paneli açacak olan buton.")]
     [SerializeField] private Button openMiniGamesButton;
-    // --- EKLENEN KISIM SONU ---
+    // Mağaza butonu referansı, eğer Inspector'da atandıysa kullanılabilir.
+    // [SerializeField] private Button openShopButton; 
+
+    [Header("Sahne Geçiş")]
+    [SerializeField] private Button goToMapButton;
 
     private long displayedGold = 0;
     private Tween buttonPulseAnimation;
@@ -36,33 +37,21 @@ public class UIManager : MonoBehaviour
         if (UpgradeManager.Instance != null)
             UpgradeManager.Instance.OnLevelUp += UpdateLevelUI;
 
-        upgradeButton.onClick.AddListener(() => UpgradeManager.Instance.AttemptUpgrade());
+        if (upgradeButton != null)
+            upgradeButton.onClick.AddListener(() => UpgradeManager.Instance.AttemptUpgrade());
 
-        // --- YENİDEN EKLENEN KISIM ---
-        // Mini oyun butonuna paneli açma fonksiyonunu bağla.
         if (openMiniGamesButton != null)
-        {
             openMiniGamesButton.onClick.AddListener(OpenMiniGamesPanel);
-        }
-        // Panelin kendisini başlangıçta kapat.
         if (miniGamesMainPanel != null)
-        {
             miniGamesMainPanel.SetActive(false);
+
+        if (goToMapButton != null)
+        {
+            goToMapButton.onClick.AddListener(GoToMapScene);
         }
-        // --- EKLENEN KISIM SONU ---
 
         InitializeUI();
     }
-
-    // --- YENİDEN EKLENEN FONKSİYON ---
-    private void OpenMiniGamesPanel()
-    {
-        if (miniGamesMainPanel != null)
-        {
-            miniGamesMainPanel.SetActive(true);
-        }
-    }
-    // --- EKLENEN FONKSİYON SONU ---
 
     private void OnDestroy()
     {
@@ -71,7 +60,30 @@ public class UIManager : MonoBehaviour
         if (UpgradeManager.Instance != null)
             UpgradeManager.Instance.OnLevelUp -= UpdateLevelUI;
 
-        if (buttonPulseAnimation != null) buttonPulseAnimation.Kill();
+        if (buttonPulseAnimation != null)
+        {
+            buttonPulseAnimation.Kill();
+        }
+    }
+
+    private void GoToMapScene()
+    {
+        if (SceneLoader.Instance != null)
+        {
+            SceneLoader.Instance.LoadMapScene();
+        }
+        else
+        {
+            Debug.LogError("SceneLoader sahnede bulunamadı!");
+        }
+    }
+
+    private void OpenMiniGamesPanel()
+    {
+        if (miniGamesMainPanel != null)
+        {
+            miniGamesMainPanel.SetActive(true);
+        }
     }
 
     private void InitializeUI()
@@ -93,7 +105,7 @@ public class UIManager : MonoBehaviour
         DOTween.To(() => displayedGold, x => displayedGold = x, newGoldAmount, 0.5f)
             .OnUpdate(() =>
             {
-                goldText.text = FormatNumber(displayedGold);
+                if (goldText != null) goldText.text = FormatNumber(displayedGold);
             });
 
         UpdateUpgradeButton();
@@ -108,7 +120,7 @@ public class UIManager : MonoBehaviour
 
     private void UpdateUpgradeButton()
     {
-        if (UpgradeManager.Instance == null || CurrencyManager.Instance == null) return;
+        if (UpgradeManager.Instance == null || CurrencyManager.Instance == null || upgradeButton == null) return;
 
         int nextLevelIndex = UpgradeManager.Instance.CurrentLevel + 1;
         if (nextLevelIndex >= UpgradeManager.Instance.levelConfigs.Count)
@@ -116,7 +128,7 @@ public class UIManager : MonoBehaviour
             upgradeButton.interactable = false;
             upgradeButtonText.text = "Maksimum Seviye";
             if (buttonPulseAnimation != null) buttonPulseAnimation.Kill();
-            if (upgradeButton != null) upgradeButton.transform.localScale = upgradeButtonOriginalScale;
+            upgradeButton.transform.localScale = upgradeButtonOriginalScale;
             return;
         }
 
@@ -132,6 +144,7 @@ public class UIManager : MonoBehaviour
             {
                 buttonPulseAnimation = DOTween.Sequence()
                     .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 1.1f, 0.4f).SetEase(Ease.OutQuad))
+                    // --- HATA DÜZELTMESİ BURADA ---
                     .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 0.98f, 0.8f).SetEase(Ease.InOutQuad))
                     .SetLoops(-1, LoopType.Yoyo);
             }
@@ -142,7 +155,7 @@ public class UIManager : MonoBehaviour
             {
                 buttonPulseAnimation.Kill();
                 buttonPulseAnimation = null;
-                if (upgradeButton != null) upgradeButton.transform.localScale = upgradeButtonOriginalScale;
+                upgradeButton.transform.localScale = upgradeButtonOriginalScale;
             }
         }
     }
