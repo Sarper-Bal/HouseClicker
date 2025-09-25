@@ -9,14 +9,6 @@ public class Castle : MonoBehaviour
     [Tooltip("Eğer bu bir düşman kalesiyse, özelliklerini belirleyen veri dosyası.")]
     public EnemyCastleData castleData;
 
-    // --- KALDIRILAN KISIM ---
-    // Görsel ayarlar buradan kaldırıldı.
-    // [Header("Görsel Ayarlar")]
-    // [SerializeField] private SpriteRenderer castleSpriteRenderer;
-    // [SerializeField] private Color playerOwnedColor = Color.blue;
-    // [SerializeField] private Color enemyOwnedColor = Color.red;
-    // --- KALDIRMA SONU ---
-
     // Kaledeki mevcut ordu bilgilerini tutacak değişkenler
     public int ArmySize { get; private set; }
     public long ArmyHealth { get; private set; }
@@ -35,31 +27,25 @@ public class Castle : MonoBehaviour
         button.onClick.AddListener(OnCastleClicked);
 
         // Kalenin türüne göre verileri yükle
-        if (isPlayerBase)
-        {
-            SyncWithPlayerData();
-        }
-        else
+        // Oyuncu üssü ise yükleme artık WorldMapManager tarafından tetiklenecek
+        if (!isPlayerBase)
         {
             LoadFromEnemyData();
         }
     }
 
     /// <summary>
-    /// Oyuncu üssü ise, kalenin görselini ve içindeki ordu verilerini
-    /// kalıcı yöneticilerden (UpgradeManager, SoldierManager) senkronize eder.
+    /// Oyuncu üssü ise, kalenin görselini ve içindeki ordu verilerini günceller.
     /// </summary>
-    public void SyncWithPlayerData()
+    public void SyncWithPlayerData(LevelData currentLevelData) // Metot artık LevelData parametresi alıyor
     {
         if (!isPlayerBase) return;
 
-        // Sprite'ı UpgradeManager'dan al ve güncelle
-        // Not: Sprite'ı değiştirebilmek için bir SpriteRenderer referansı hala gerekli olabilir.
-        // Eğer kalelerin görselleri seviyeye göre değişmeyecekse bu kısım da silinebilir.
+        // Sprite'ı parametre olarak gelen LevelData'dan al ve güncelle
         var spriteRenderer = GetComponent<SpriteRenderer>();
-        if (UpgradeManager.Instance != null && spriteRenderer != null)
+        if (currentLevelData != null && spriteRenderer != null)
         {
-            spriteRenderer.sprite = UpgradeManager.Instance.GetCurrentLevelData().houseSprite;
+            spriteRenderer.sprite = currentLevelData.houseSprite;
         }
 
         // Ordu verilerini SoldierManager'dan al ve güncelle
@@ -70,7 +56,7 @@ public class Castle : MonoBehaviour
             this.ArmyAttack = SoldierManager.Instance.TotalAttack;
         }
 
-        Debug.Log($"Oyuncu kalesi senkronize edildi. Asker: {ArmySize}");
+        Debug.Log($"Oyuncu kalesi senkronize edildi. Seviye sprite'ı ayarlandı.");
     }
 
     /// <summary>
@@ -105,10 +91,5 @@ public class Castle : MonoBehaviour
         isConquered = true;
         isPlayerBase = true;
         castleData = null; // Artık düşman verisine ihtiyacı yok
-        // Renk değiştirme kodu buradan kaldırıldı.
     }
-
-    // --- KALDIRILAN FONKSİYON ---
-    // private void UpdateCastleVisuals() { ... }
-    // --- KALDIRMA SONU ---
 }

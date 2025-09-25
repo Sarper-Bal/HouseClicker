@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Linq;
+using System.Collections.Generic; // List kullanabilmek için eklendi
 
 public class WorldMapManager : MonoBehaviour
 {
@@ -9,6 +10,12 @@ public class WorldMapManager : MonoBehaviour
     [SerializeField] private MapUIController uiController;
     [Tooltip("Oyuncunun haritadaki ana kalesini buraya sürükleyin.")]
     [SerializeField] private Castle playerBase;
+
+    // --- YENİ EKLENEN KISIM ---
+    [Header("Level Verileri")]
+    [Tooltip("Tüm LevelData ScriptableObject'lerini buraya sürükleyin.")]
+    public List<LevelData> levelConfigs;
+    // -------------------------
 
     private Castle selectedCastle;
 
@@ -33,7 +40,21 @@ public class WorldMapManager : MonoBehaviour
 
         if (playerBase != null)
         {
-            playerBase.SyncWithPlayerData();
+            // Kayıtlı seviyeyi PlayerPrefs'ten oku
+            int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 0);
+
+            // Mevcut seviyeye karşılık gelen LevelData'yı listeden bul
+            LevelData currentLevelData = levelConfigs.FirstOrDefault(ld => ld.levelIndex == currentLevel);
+
+            if (currentLevelData != null)
+            {
+                // Bulunan LevelData ile oyuncu kalesinin görselini güncelle
+                playerBase.SyncWithPlayerData(currentLevelData);
+            }
+            else
+            {
+                Debug.LogError($"Seviye {currentLevel} için LevelData bulunamadı! WorldMapManager üzerindeki 'levelConfigs' listesini kontrol edin.");
+            }
         }
     }
 
@@ -53,12 +74,6 @@ public class WorldMapManager : MonoBehaviour
         {
             // Düşman kalesine tıklandı. Şimdilik hiçbir şey yapma.
             Debug.Log($"{castle.castleData.castleName} adlı düşman kalesine tıklandı.");
-            // uiController.ShowEnemyCastlePanel(...) çağrısı buradan kaldırıldı.
         }
     }
-
-    // --- KALDIRILAN FONKSİYON ---
-    // AttackSelectedCastle() fonksiyonu şimdilik gereksiz olduğu için kaldırıldı.
-    // Bu fonksiyonu daha sonra savaş sistemini eklerken geri getireceğiz.
-    // --- KALDIRMA SONU ---
 }
