@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyCastleData
   castleName: "D\xFC\u015Fman Kalesi"
   castleSprite: {fileID: 21300000, guid: cdf346389d32d473bab364cf6bf1565d, type: 3}
-  soldiers: 5
-  totalHealth: 5
-  totalAttack: 20
-  rewardGold: 1000
+  armyComposition:
+  - soldierData: {fileID: 11400000, guid: ef77b86151aa14f56acd7ecd99495a79, type: 2}
+    count: 2

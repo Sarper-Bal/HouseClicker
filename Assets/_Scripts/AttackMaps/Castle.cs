@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class Castle : MonoBehaviour
 {
@@ -26,29 +27,26 @@ public class Castle : MonoBehaviour
         }
         button.onClick.AddListener(OnCastleClicked);
 
-        // Kalenin türüne göre verileri yükle
-        // Oyuncu üssü ise yükleme artık WorldMapManager tarafından tetiklenecek
-        if (!isPlayerBase)
+        if (isPlayerBase)
+        {
+            // Oyuncu üssünün verileri WorldMapManager tarafından senkronize edilecek.
+        }
+        else
         {
             LoadFromEnemyData();
         }
     }
 
-    /// <summary>
-    /// Oyuncu üssü ise, kalenin görselini ve içindeki ordu verilerini günceller.
-    /// </summary>
-    public void SyncWithPlayerData(LevelData currentLevelData) // Metot artık LevelData parametresi alıyor
+    public void SyncWithPlayerData(LevelData currentLevelData)
     {
         if (!isPlayerBase) return;
 
-        // Sprite'ı parametre olarak gelen LevelData'dan al ve güncelle
         var spriteRenderer = GetComponent<SpriteRenderer>();
         if (currentLevelData != null && spriteRenderer != null)
         {
             spriteRenderer.sprite = currentLevelData.houseSprite;
         }
 
-        // Ordu verilerini SoldierManager'dan al ve güncelle
         if (SoldierManager.Instance != null)
         {
             this.ArmySize = SoldierManager.Instance.GetTotalSoldierCount();
@@ -60,22 +58,37 @@ public class Castle : MonoBehaviour
     }
 
     /// <summary>
-    /// Düşman kalesi ise, verilerini ScriptableObject'ten yükler.
+    /// Düşman kalesi ise, verilerini ScriptableObject'ten yükler ve gücünü dinamik olarak hesaplar.
     /// </summary>
     private void LoadFromEnemyData()
     {
-        if (castleData != null)
-        {
-            this.ArmySize = castleData.soldiers;
-            this.ArmyHealth = castleData.totalHealth;
-            this.ArmyAttack = castleData.totalAttack;
+        if (isPlayerBase || castleData == null) return;
 
-            var spriteRenderer = GetComponent<SpriteRenderer>();
-            if (spriteRenderer != null)
+        ArmySize = 0;
+        ArmyHealth = 0;
+        ArmyAttack = 0;
+
+        foreach (var armyUnit in castleData.armyComposition)
+        {
+            if (armyUnit.soldierData != null && armyUnit.count > 0)
             {
-                spriteRenderer.sprite = castleData.castleSprite;
+                ArmySize += armyUnit.count;
+                // --- HATA DÜZELTİLDİ ---
+                // 'baseHealth' yerine 'health' kullanıldı.
+                ArmyHealth += (long)armyUnit.soldierData.health * armyUnit.count;
+                // 'baseAttack' yerine 'attack' kullanıldı.
+                ArmyAttack += (long)armyUnit.soldierData.attack * armyUnit.count;
+                // -------------------------
             }
         }
+
+        var spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.sprite = castleData.castleSprite;
+        }
+
+        Debug.Log($"{castleData.castleName} kalesi yüklendi. Toplam Asker: {ArmySize}, Sağlık: {ArmyHealth}, Saldırı: {ArmyAttack}");
     }
 
     public void OnCastleClicked()
@@ -90,6 +103,6 @@ public class Castle : MonoBehaviour
     {
         isConquered = true;
         isPlayerBase = true;
-        castleData = null; // Artık düşman verisine ihtiyacı yok
+        castleData = null;
     }
 }
