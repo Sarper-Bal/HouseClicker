@@ -255,6 +255,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 70452609}
   m_CullTransparentMesh: 1
+--- !u!1 &348320270
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 348320271}
+  m_Layer: 0
+  m_Name: '--  '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &348320271
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 348320270}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &401176945
 GameObject:
   m_ObjectHideFlags: 0
@@ -288,6 +319,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Castle
   isPlayerBase: 0
   castleData: {fileID: 11400000, guid: 5557b7a742b1c49b688d32d15d1ee467, type: 2}
+  attackableCastles:
+  - {fileID: 1169003849}
+  lockedColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.7}
+  attackableColor: {r: 0.32012817, g: 0.2672659, b: 0.735849, a: 1}
+  playerOwnedColor: {r: 0.3, g: 0.5, b: 1, a: 1}
 --- !u!212 &401176947
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -355,7 +391,7 @@ Transform:
   m_GameObject: {fileID: 401176945}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.12, y: 1.71, z: 0}
+  m_LocalPosition: {x: 0.84, y: 0.5, z: 0}
   m_LocalScale: {x: 4, y: 4, z: 4}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -564,6 +600,37 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &670685322
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 670685323}
+  m_Layer: 0
+  m_Name: '--   '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &670685323
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 670685322}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &684035521
 GameObject:
   m_ObjectHideFlags: 0
@@ -902,6 +969,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Castle
   isPlayerBase: 0
   castleData: {fileID: 11400000, guid: 5ea32f2afa7ae45708b148418ca66855, type: 2}
+  attackableCastles: []
+  lockedColor: {r: 0.6226415, g: 0.6226415, b: 0.6226415, a: 0.4745098}
+  attackableColor: {r: 0.2874899, g: 0.26312745, b: 0.6886792, a: 1}
+  playerOwnedColor: {r: 0.3, g: 0.5, b: 1, a: 1}
 --- !u!212 &1169003850
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -969,7 +1040,7 @@ Transform:
   m_GameObject: {fileID: 1169003848}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.9, y: -0.06, z: 0}
+  m_LocalPosition: {x: -0.92, y: 2.79, z: 0}
   m_LocalScale: {x: 4, y: 4, z: 4}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -1405,6 +1476,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Castle
   isPlayerBase: 1
   castleData: {fileID: 0}
+  attackableCastles:
+  - {fileID: 401176946}
+  lockedColor: {r: 1, g: 1, b: 1, a: 0}
+  attackableColor: {r: 1, g: 1, b: 1, a: 0}
+  playerOwnedColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!212 &1863092438
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1840,7 +1916,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7374674971487133021, guid: f41f50c4d0d5641a5821fefd8a631c50, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7374674971487133021, guid: f41f50c4d0d5641a5821fefd8a631c50, type: 3}
       propertyPath: m_AnchorMin.x
@@ -1848,11 +1924,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7374674971487133021, guid: f41f50c4d0d5641a5821fefd8a631c50, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7374674971487133021, guid: f41f50c4d0d5641a5821fefd8a631c50, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 883.2038
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7374674971487133021, guid: f41f50c4d0d5641a5821fefd8a631c50, type: 3}
       propertyPath: m_SizeDelta.y
@@ -1888,11 +1964,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7374674971487133021, guid: f41f50c4d0d5641a5821fefd8a631c50, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 443.6019
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7374674971487133021, guid: f41f50c4d0d5641a5821fefd8a631c50, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -152
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7374674971487133021, guid: f41f50c4d0d5641a5821fefd8a631c50, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1921,6 +1997,8 @@ SceneRoots:
   - {fileID: 1271564352}
   - {fileID: 666439310}
   - {fileID: 1586278257}
+  - {fileID: 348320271}
+  - {fileID: 1863092439}
   - {fileID: 401176948}
   - {fileID: 1169003851}
-  - {fileID: 1863092439}
+  - {fileID: 670685323}

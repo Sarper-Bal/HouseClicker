@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Linq;
-using System.Collections.Generic; // List kullanabilmek için eklendi
+using System.Collections.Generic;
 
 public class WorldMapManager : MonoBehaviour
 {
@@ -8,16 +8,15 @@ public class WorldMapManager : MonoBehaviour
 
     [Header("Referanslar")]
     [SerializeField] private MapUIController uiController;
-    [Tooltip("Oyuncunun haritadaki ana kalesini buraya sürükleyin.")]
+    [Tooltip("Oyuncunun haritadaki başlangıç kalesini buraya sürükleyin.")]
     [SerializeField] private Castle playerBase;
 
-    // --- YENİ EKLENEN KISIM ---
     [Header("Level Verileri")]
     [Tooltip("Tüm LevelData ScriptableObject'lerini buraya sürükleyin.")]
     public List<LevelData> levelConfigs;
-    // -------------------------
 
     private Castle selectedCastle;
+    private List<Castle> allCastlesOnMap; // Haritadaki tüm kalelerin listesi
 
     private void Awake()
     {
@@ -33,46 +32,85 @@ public class WorldMapManager : MonoBehaviour
 
     private void Start()
     {
+        // Haritadaki tüm kaleleri bul ve listeye ata
+        allCastlesOnMap = FindObjectsOfType<Castle>().ToList();
+
         if (playerBase == null)
         {
-            playerBase = FindObjectsOfType<Castle>().FirstOrDefault(c => c.isPlayerBase);
+            playerBase = allCastlesOnMap.FirstOrDefault(c => c.isPlayerBase);
         }
+
+        InitializeMap(); // Haritayı başlangıç durumuna getir
 
         if (playerBase != null)
         {
-            // Kayıtlı seviyeyi PlayerPrefs'ten oku
+            // Oyuncu üssünün sprite'ını ayarla
             int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 0);
-
-            // Mevcut seviyeye karşılık gelen LevelData'yı listeden bul
             LevelData currentLevelData = levelConfigs.FirstOrDefault(ld => ld.levelIndex == currentLevel);
-
             if (currentLevelData != null)
             {
-                // Bulunan LevelData ile oyuncu kalesinin görselini güncelle
                 playerBase.SyncWithPlayerData(currentLevelData);
-            }
-            else
-            {
-                Debug.LogError($"Seviye {currentLevel} için LevelData bulunamadı! WorldMapManager üzerindeki 'levelConfigs' listesini kontrol edin.");
             }
         }
     }
 
+    // --- YENİ EKLENEN METOTLAR ---
     /// <summary>
-    /// Bir kaleye tıklandığında Castle script'i tarafından çağrılır.
+    /// Haritayı oyun başlangıcı için hazırlar. Tüm kalelerin durumunu ayarlar.
     /// </summary>
+    private void InitializeMap()
+    {
+        foreach (var castle in allCastlesOnMap)
+        {
+            if (castle.isPlayerBase)
+            {
+                // Başlangıç kalesini "PlayerOwned" yap
+                castle.SetState(CastleState.PlayerOwned);
+            }
+            else
+            {
+                // Diğer tüm kaleleri "Locked" yap
+                castle.SetState(CastleState.Locked);
+            }
+        }
+
+        // Başlangıç kalesine komşu olan ve fethedilmiş tüm kalelerin yollarını aç
+        foreach (var ownedCastle in allCastlesOnMap.Where(c => c.CurrentState == CastleState.PlayerOwned))
+        {
+            UnlockAdjacentCastles(ownedCastle);
+        }
+    }
+
+    /// <summary>
+    /// Verilen bir kalenin komşularını "Attackable" durumuna getirir.
+    /// </summary>
+    public void UnlockAdjacentCastles(Castle sourceCastle)
+    {
+        if (sourceCastle.attackableCastles == null) return;
+
+        foreach (var adjacentCastle in sourceCastle.attackableCastles)
+        {
+            // Sadece kilitli olan kalelerin durumunu değiştir
+            if (adjacentCastle.CurrentState == CastleState.Locked)
+            {
+                adjacentCastle.SetState(CastleState.Attackable);
+            }
+        }
+    }
+    // -------------------------
+
     public void SelectCastle(Castle castle)
     {
         selectedCastle = castle;
 
-        if (castle.isPlayerBase)
+        if (castle.CurrentState == CastleState.PlayerOwned)
         {
-            // Oyuncu kalesine tıklandı, bilgi panelini göster
             uiController.ShowPlayerCastlePanel();
         }
-        else
+        else if (castle.CurrentState == CastleState.Attackable)
         {
-            // Düşman kalesine tıklandı. Şimdilik hiçbir şey yapma.
+            // Düşman kalesine tıklandı. Şimdilik sadece log yazdırıyoruz.
+            // Gelecekte burada düşman bilgi paneli açılabilir.
             Debug.Log($"{castle.castleData.castleName} adlı düşman kalesine tıklandı.");
         }
     }
