@@ -1,13 +1,10 @@
 using UnityEngine;
 using System;
-using System.Collections;
 
 public class CurrencyManager : MonoBehaviour
 {
+    // --- Singleton Pattern (Sahneye Özel) ---
     public static CurrencyManager Instance { get; private set; }
-
-    // Coroutine'i durdurma ile ilgili tüm kodlar kaldırıldı.
-    // private Coroutine passiveIncomeCoroutine;
 
     private void Awake()
     {
@@ -18,75 +15,68 @@ public class CurrencyManager : MonoBehaviour
         else
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
     }
+    // --- Singleton Pattern Sonu ---
 
     public long CurrentGold { get; private set; }
+
+    // Genel altın değişiklikleri için (UI güncellemeleri vb.)
     public event Action<long> OnGoldChanged;
+
+    // --- HATA DÜZELTMESİ ---
+    // FloatingTextManager'ın ihtiyaç duyduğu, sadece pasif gelir eklendiğinde tetiklenecek olan olay.
     public event Action<long> OnPassiveGoldAdded;
+    // --- HATA DÜZELTMESİ SONU ---
+
+    private const string GoldSaveKey = "CurrentGold";
 
     private void Start()
     {
         LoadGold();
-        // Pasif gelir görevini sadece bir kez, oyunun en başında başlatıyoruz.
-        // Artık bir değişkene atamaya veya durdurmaya gerek yok.
-        StartCoroutine(PassiveIncomeCoroutine());
+        // Başlangıçta UI'ın doğru değeri göstermesi için event'i tetikle.
+        OnGoldChanged?.Invoke(CurrentGold);
     }
 
-    // StopPassiveIncome() fonksiyonu buradan kaldırıldı.
-
-    private IEnumerator PassiveIncomeCoroutine()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(1f);
-
-            // Oyuncunun hangi sahnede olduğunu kontrol etmemize gerek yok.
-            // Bu coroutine her zaman çalışacak ve altın ekleyecek.
-            if (UpgradeManager.Instance != null)
-            {
-                LevelData currentLevelData = UpgradeManager.Instance.GetCurrentLevelData();
-                if (currentLevelData != null && currentLevelData.goldPerSecond > 0)
-                {
-                    long passiveAmount = currentLevelData.goldPerSecond;
-                    // Sinyali gönder. Eğer dinleyen (FloatingTextManager) varsa çalışır, yoksa görmezden gelinir.
-                    OnPassiveGoldAdded?.Invoke(passiveAmount);
-                    AddGold(passiveAmount);
-                }
-            }
-        }
-    }
-
+    // Tıklama, bonus gibi anlık ve aktif kazançlar için bu metodu kullan.
     public void AddGold(long amount)
     {
-        if (amount < 0) return;
+        if (amount <= 0) return;
         CurrentGold += amount;
         OnGoldChanged?.Invoke(CurrentGold);
         SaveGold();
     }
 
+    // --- YENİ EKLENEN METOD ---
+    // Sadece pasif gelir ekleyen script'lerin bu metodu çağırması gerekiyor.
+    public void AddPassiveGold(long amount)
+    {
+        if (amount <= 0) return;
+        CurrentGold += amount;
+        OnGoldChanged?.Invoke(CurrentGold); // Genel UI'ın da güncellenmesi için bu event'i tetikliyoruz.
+        OnPassiveGoldAdded?.Invoke(amount); // FloatingTextManager için özel event'i tetikliyoruz.
+        SaveGold();
+    }
+    // --- YENİ METOD SONU ---
+
     public void SpendGold(long amount)
     {
-        if (amount < 0) return;
-        if (CurrentGold >= amount)
-        {
-            CurrentGold -= amount;
-            OnGoldChanged?.Invoke(CurrentGold);
-            SaveGold();
-        }
+        if (amount <= 0 || amount > CurrentGold) return;
+        CurrentGold -= amount;
+        OnGoldChanged?.Invoke(CurrentGold);
+        SaveGold();
     }
 
     private void SaveGold()
     {
-        PlayerPrefs.SetString("CurrentGold", CurrentGold.ToString());
+        PlayerPrefs.SetString(GoldSaveKey, CurrentGold.ToString());
+        PlayerPrefs.Save();
     }
 
     private void LoadGold()
     {
-        string goldStr = PlayerPrefs.GetString("CurrentGold", "0");
-        long.TryParse(goldStr, out long loadedGold);
+        string savedGold = PlayerPrefs.GetString(GoldSaveKey, "0");
+        long.TryParse(savedGold, out long loadedGold);
         CurrentGold = loadedGold;
-        OnGoldChanged?.Invoke(CurrentGold);
     }
 }

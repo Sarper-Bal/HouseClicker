@@ -4,7 +4,6 @@ using System;
 
 public class UpgradeManager : MonoBehaviour
 {
-    // --- Singleton Pattern Başlangıcı ---
     public static UpgradeManager Instance { get; private set; }
 
     private void Awake()
@@ -16,28 +15,50 @@ public class UpgradeManager : MonoBehaviour
         else
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
     }
-    // --- Singleton Pattern Sonu ---
 
-    // Buraya Unity Editöründen oluşturduğumuz tüm LevelData dosyalarını sürükleyeceğiz.
     public List<LevelData> levelConfigs;
-
     public int CurrentLevel { get; private set; }
-
-    // Bu event, seviye atlandığında diğer script'lere haber vermek için (Örn: Görsel güncellemeleri)
     public event Action<LevelData> OnLevelUp;
+
+    // --- GERİ GETİRİLEN SİSTEM BAŞLANGICI ---
+    // Seviyeye bağlı pasif gelir için zamanlayıcı
+    private float passiveIncomeTimer = 0f;
+    // --- GERİ GETİRİLEN SİSTEM SONU ---
 
     private void Start()
     {
         LoadLevel();
+        OnLevelUp?.Invoke(GetCurrentLevelData());
     }
 
-    // Dışarıdan çağrılacak ana geliştirme fonksiyonu (UI Butonu tarafından).
+    // --- GERİ GETİRİLEN SİSTEM BAŞLANGICI ---
+    // Bu fonksiyon, seviyeye bağlı pasif geliri (goldPerSecond) hesaplar ve ekler.
+    private void Update()
+    {
+        // Zamanlayıcıyı her saniye artır.
+        passiveIncomeTimer += Time.deltaTime;
+
+        // 1 saniye geçtiyse geliri ekle ve zamanlayıcıyı sıfırla.
+        if (passiveIncomeTimer >= 1f)
+        {
+            LevelData currentLevelData = GetCurrentLevelData();
+            if (currentLevelData != null && currentLevelData.goldPerSecond > 0)
+            {
+                // CurrencyManager'daki pasif altın ekleme fonksiyonunu kullanıyoruz.
+                // Bu fonksiyon, hem altını ekler hem de FloatingTextManager'ın duyması gereken event'i tetikler.
+                CurrencyManager.Instance.AddPassiveGold(currentLevelData.goldPerSecond);
+            }
+
+            // Zamanlayıcıyı sıfırlarken artan kısmı koru (örn: 1.1s olduysa 0.1s olarak başla).
+            passiveIncomeTimer -= 1f;
+        }
+    }
+    // --- GERİ GETİRİLEN SİSTEM SONU ---
+
     public void AttemptUpgrade()
     {
-        // Son seviyede miyiz kontrolü
         if (CurrentLevel >= levelConfigs.Count - 1)
         {
             Debug.Log("Maksimum seviyeye ulaşıldı!");
@@ -50,8 +71,9 @@ public class UpgradeManager : MonoBehaviour
             CurrencyManager.Instance.SpendGold(nextLevelData.upgradeCost);
             CurrentLevel++;
             SaveLevel();
+
             Debug.Log("Seviye atlandı! Yeni seviye: " + CurrentLevel);
-            OnLevelUp?.Invoke(GetCurrentLevelData()); // Seviye atlama event'ini tetikle.
+            OnLevelUp?.Invoke(GetCurrentLevelData());
         }
         else
         {
@@ -59,25 +81,23 @@ public class UpgradeManager : MonoBehaviour
         }
     }
 
-    // Mevcut seviyenin tüm verilerini kolayca almak için bir yardımcı fonksiyon.
     public LevelData GetCurrentLevelData()
     {
         if (CurrentLevel < levelConfigs.Count)
         {
             return levelConfigs[CurrentLevel];
         }
-        return null; // Hata durumu
+        return null;
     }
 
     private void SaveLevel()
     {
         PlayerPrefs.SetInt("CurrentLevel", CurrentLevel);
+        PlayerPrefs.Save();
     }
 
     private void LoadLevel()
     {
-        CurrentLevel = PlayerPrefs.GetInt("CurrentLevel", 0); // Oyuna seviye 0'dan başla.
-        // Oyun başladığında görsellerin vs. doğru yüklenmesi için event'i tetikle.
-        OnLevelUp?.Invoke(GetCurrentLevelData());
+        CurrentLevel = PlayerPrefs.GetInt("CurrentLevel", 0);
     }
 }
