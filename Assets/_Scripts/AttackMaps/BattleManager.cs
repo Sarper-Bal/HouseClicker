@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq; // Dictionary kullanabilmek için
+using System.Linq;
 
 // Savaş alanındaki bir askerin anlık durumunu tutmak için.
 public class BattleParticipant
@@ -45,7 +45,7 @@ public class BattleManager : MonoBehaviour
     private BattleParticipant currentEnemy;
 
     private MapUIController uiController;
-    private List<SoldierData> allSoldierTypes; // --- YENİ EKLENDİ ---
+    private List<SoldierData> allSoldierTypes;
 
     private void Awake()
     {
@@ -58,12 +58,11 @@ public class BattleManager : MonoBehaviour
         uiController = controller;
     }
 
-    // --- GÜNCELLENEN METOT İMZASI ---
     public void StartBattle(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy, List<SoldierData> allTypes)
     {
         if (uiController == null) return;
 
-        allSoldierTypes = allTypes; // --- YENİ EKLENDİ ---
+        allSoldierTypes = allTypes;
 
         PrepareArmies(playerArmy, enemyArmy);
         if (playerArmyQueue.Count == 0 || enemyArmyQueue.Count == 0)
@@ -126,17 +125,11 @@ public class BattleManager : MonoBehaviour
     {
         bool playerWon = (currentPlayer != null && currentEnemy == null);
 
-        // --- YENİ EKLENEN SATIR ---
         UpdateArmyRecordsAfterBattle(playerWon);
-        // -------------------------
 
         uiController.ShowResultPanel(playerWon);
     }
 
-    // --- TAMAMEN YENİ FONKSİYON ---
-    /// <summary>
-    /// Savaş sonucuna göre oyuncunun asker kayıtlarını PlayerPrefs'te günceller.
-    /// </summary>
     private void UpdateArmyRecordsAfterBattle(bool playerWon)
     {
         if (allSoldierTypes == null)
@@ -147,16 +140,13 @@ public class BattleManager : MonoBehaviour
 
         if (playerWon)
         {
-            // Kazandıysa: Hayatta kalanları say ve kaydet.
             var survivingSoldiers = new Dictionary<string, int>();
 
-            // Savaşta ölmeyen son askeri de listeye ekle
             if (currentPlayer != null)
             {
                 playerArmyQueue.Enqueue(currentPlayer.soldierData);
             }
 
-            // Kuyrukta kalan tüm askerleri say
             foreach (var soldier in playerArmyQueue)
             {
                 if (!survivingSoldiers.ContainsKey(soldier.soldierName))
@@ -166,7 +156,6 @@ public class BattleManager : MonoBehaviour
                 survivingSoldiers[soldier.soldierName]++;
             }
 
-            // Tüm asker türlerini döngüye al ve PlayerPrefs'i güncelle
             foreach (var type in allSoldierTypes)
             {
                 int newCount = survivingSoldiers.ContainsKey(type.soldierName) ? survivingSoldiers[type.soldierName] : 0;
@@ -175,17 +164,24 @@ public class BattleManager : MonoBehaviour
         }
         else
         {
-            // Kaybettiyse: Tüm askerleri sıfırla.
             foreach (var type in allSoldierTypes)
             {
                 PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, 0);
             }
         }
 
-        PlayerPrefs.Save(); // Değişiklikleri diske kaydet
+        PlayerPrefs.Save();
         Debug.Log("Asker kayıtları savaş sonucuna göre güncellendi.");
+
+        // --- TEK VE ÖNEMLİ DEĞİŞİKLİK BURADA ---
+        // PlayerPrefs güncellendikten sonra, hafızadaki SoldierManager'a da
+        // verilerini bu yeni PlayerPrefs'ten tazelemesini söylüyoruz.
+        if (SoldierManager.Instance != null)
+        {
+            SoldierManager.Instance.RefreshDataFromPrefs();
+        }
+        // ------------------------------------
     }
-    // ----------------------------
 
     private void LoadNextPlayerSoldier()
     {
