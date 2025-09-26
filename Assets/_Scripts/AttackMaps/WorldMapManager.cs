@@ -8,6 +8,7 @@ public class WorldMapManager : MonoBehaviour
 
     [Header("Referanslar")]
     [SerializeField] private MapUIController uiController;
+    [Tooltip("Oyuncunun haritadaki başlangıç kalesini buraya sürükleyin.")]
     [SerializeField] private Castle playerBase;
     [SerializeField] private List<SoldierData> allSoldierTypes;
 
@@ -27,8 +28,12 @@ public class WorldMapManager : MonoBehaviour
     private void Start()
     {
         allCastlesOnMap = FindObjectsOfType<Castle>().ToList();
+
+        // Kayıtlı bir harita durumu varsa yükle, yoksa haritayı sıfırdan başlat.
+        LoadMapState();
+
         if (playerBase == null) { playerBase = allCastlesOnMap.FirstOrDefault(c => c.isPlayerBase); }
-        InitializeMap();
+
         if (playerBase != null)
         {
             int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 0);
@@ -40,7 +45,6 @@ public class WorldMapManager : MonoBehaviour
         }
     }
 
-    // --- GÜNCELLENEN FONKSİYON ---
     public void InitiateBattle()
     {
         if (selectedCastle == null || selectedCastle.isPlayerBase) return;
@@ -49,25 +53,101 @@ public class WorldMapManager : MonoBehaviour
 
         if (playerArmy.Count == 0)
         {
-            Debug.LogError("Oyuncu ordusu boş! Savaşa girilemez. 'WorldMapManager' Inspector'ündeki 'All Soldier Types' listesini kontrol et.");
+            Debug.LogError("Oyuncu ordusu boş! Savaşa girilemez.");
             return;
         }
 
         List<EnemyArmyUnit> enemyArmy = selectedCastle.castleData.armyComposition;
 
-        // BattleManager'a tüm asker türlerinin listesini de gönderiyoruz.
-        BattleManager.Instance.StartBattle(playerArmy, enemyArmy, allSoldierTypes);
+        // BattleManager'a saldırılan kalenin referansını da gönder.
+        BattleManager.Instance.StartBattle(playerArmy, enemyArmy, allSoldierTypes, selectedCastle);
     }
-    // ----------------------------
+
+    /// <summary>
+    /// Belirtilen kalenin fethedilmesini sağlar. BattleManager tarafından çağrılır.
+    /// </summary>
+    public void ConquerCastle(Castle castleToConquer)
+    {
+        if (castleToConquer != null)
+        {
+            castleToConquer.Conquer();
+        }
+    }
+
+    private void SaveMapState()
+    {
+        if (allCastlesOnMap == null) return;
+        foreach (var castle in allCastlesOnMap)
+        {
+            PlayerPrefs.SetInt("CastleState_" + castle.gameObject.name, (int)castle.CurrentState);
+        }
+        PlayerPrefs.Save();
+        Debug.Log("Harita durumu kaydedildi.");
+    }
+
+    private void LoadMapState()
+    {
+        if (allCastlesOnMap.Count == 0) return;
+
+        // Kayıtlı veri olup olmadığını kontrol etmek için ilk kaleyi kullan.
+        bool isFirstLoad = !PlayerPrefs.HasKey("CastleState_" + allCastlesOnMap[0].gameObject.name);
+
+        if (isFirstLoad)
+        {
+            InitializeMapForFirstTime();
+        }
+        else
+        {
+            foreach (var castle in allCastlesOnMap)
+            {
+                CastleState savedState = (CastleState)PlayerPrefs.GetInt("CastleState_" + castle.gameObject.name);
+                castle.SetState(savedState);
+            }
+            Debug.Log("Harita durumu yüklendi.");
+        }
+    }
+
+    private void InitializeMapForFirstTime()
+    {
+        Debug.Log("İlk açılış, harita sıfırlanıyor.");
+        foreach (var castle in allCastlesOnMap)
+        {
+            if (castle.isPlayerBase)
+            {
+                castle.SetState(CastleState.PlayerOwned);
+            }
+            else
+            {
+                castle.SetState(CastleState.Locked);
+            }
+        }
+
+        // Başlangıç kalesine bağlı yolları aç ve durumu kaydet.
+        if (playerBase != null)
+        {
+            UnlockAdjacentCastles(playerBase);
+        }
+    }
+
+    public void UnlockAdjacentCastles(Castle sourceCastle)
+    {
+        if (sourceCastle.attackableCastles == null) return;
+
+        foreach (var adjacentCastle in sourceCastle.attackableCastles)
+        {
+            if (adjacentCastle.CurrentState == CastleState.Locked)
+            {
+                adjacentCastle.SetState(CastleState.Attackable);
+            }
+        }
+        // Harita durumu her değiştiğinde (yeni yol açıldığında veya kale fethedildiğinde) kaydet.
+        SaveMapState();
+    }
 
     private List<SoldierData> GetPlayerArmyFromSave()
     {
         List<SoldierData> army = new List<SoldierData>();
-        if (allSoldierTypes == null || allSoldierTypes.Count == 0)
-        {
-            Debug.LogError("'All Soldier Types' listesi WorldMapManager'da atanmamış!");
-            return army;
-        }
+        if (allSoldierTypes == null || allSoldierTypes.Count == 0) return army;
 
         foreach (var soldierType in allSoldierTypes)
         {
@@ -78,31 +158,6 @@ public class WorldMapManager : MonoBehaviour
             }
         }
         return army;
-    }
-
-    private void InitializeMap()
-    {
-        foreach (var castle in allCastlesOnMap)
-        {
-            if (castle.isPlayerBase) { castle.SetState(CastleState.PlayerOwned); }
-            else { castle.SetState(CastleState.Locked); }
-        }
-        foreach (var ownedCastle in allCastlesOnMap.Where(c => c.CurrentState == CastleState.PlayerOwned))
-        {
-            UnlockAdjacentCastles(ownedCastle);
-        }
-    }
-
-    public void UnlockAdjacentCastles(Castle sourceCastle)
-    {
-        if (sourceCastle.attackableCastles == null) return;
-        foreach (var adjacentCastle in sourceCastle.attackableCastles)
-        {
-            if (adjacentCastle.CurrentState == CastleState.Locked)
-            {
-                adjacentCastle.SetState(CastleState.Attackable);
-            }
-        }
     }
 
     public void SelectCastle(Castle castle)

@@ -1,9 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic; // List kullanabilmek için eklendi
-using System.Linq;
+using System.Collections.Generic;
+using DG.Tweening; // DOTween kütüphanesini kullanmak için eklendi
 
-// --- YENİ EKLENEN KISIM ---
 // Kalenin sahip olabileceği durumları tanımlar.
 public enum CastleState
 {
@@ -11,7 +10,6 @@ public enum CastleState
     Attackable,   // Saldırıya açık
     PlayerOwned   // Oyuncuya ait
 }
-// -------------------------
 
 public class Castle : MonoBehaviour
 {
@@ -21,7 +19,6 @@ public class Castle : MonoBehaviour
     [Tooltip("Eğer bu bir düşman kalesiyse, özelliklerini belirleyen veri dosyası.")]
     public EnemyCastleData castleData;
 
-    // --- YENİ EKLENEN KISIM ---
     [Header("Fetih Sistemi")]
     [Tooltip("Bu kale fethedildiğinde saldırılabilir hale gelecek kaleleri buraya sürükleyin.")]
     public List<Castle> attackableCastles; // Saldırı yolları listesi
@@ -33,14 +30,8 @@ public class Castle : MonoBehaviour
 
     public CastleState CurrentState { get; private set; } = CastleState.Locked;
     private SpriteRenderer spriteRenderer;
-    // -------------------------
-
-    // Ordu bilgileri
-    public int ArmySize { get; private set; }
-    public long ArmyHealth { get; private set; }
-    public long ArmyAttack { get; private set; }
-
     private Button button;
+    private Tween pulseAnimation; // DOTween animasyonu için referans
 
     private void Awake()
     {
@@ -53,15 +44,6 @@ public class Castle : MonoBehaviour
         button.onClick.AddListener(OnCastleClicked);
     }
 
-    private void Start()
-    {
-        if (!isPlayerBase)
-        {
-            LoadFromEnemyData();
-        }
-    }
-
-    // --- GÜNCELLENEN METOT ---
     public void OnCastleClicked()
     {
         // Sadece oyuncuya ait veya saldırılabilir kalelere tıklanabilir.
@@ -72,13 +54,8 @@ public class Castle : MonoBehaviour
                 WorldMapManager.Instance.SelectCastle(this);
             }
         }
-        else
-        {
-            Debug.Log($"{castleData.castleName} kalesi kilitli, henüz saldırılamaz.");
-        }
     }
 
-    // --- YENİ EKLENEN METOTLAR ---
     /// <summary>
     /// Kalenin durumunu ayarlar ve görselini günceller.
     /// </summary>
@@ -89,11 +66,18 @@ public class Castle : MonoBehaviour
     }
 
     /// <summary>
-    /// Kalenin rengini mevcut durumuna göre günceller.
+    /// Kalenin rengini ve animasyonunu mevcut durumuna göre günceller.
     /// </summary>
     private void UpdateCastleVisuals()
     {
         if (spriteRenderer == null) return;
+
+        // Yeni animasyonu başlatmadan önce çalışan bir animasyon varsa durdur ve ölçeği sıfırla.
+        if (pulseAnimation != null)
+        {
+            pulseAnimation.Kill();
+            transform.localScale = Vector3.one;
+        }
 
         switch (CurrentState)
         {
@@ -105,25 +89,31 @@ public class Castle : MonoBehaviour
                 break;
             case CastleState.PlayerOwned:
                 spriteRenderer.color = playerOwnedColor;
+                // Oyuncuya ait kaleler için tekrarlayan bir büyüme-küçülme animasyonu başlat.
+                pulseAnimation = transform.DOScale(1.1f, 1.0f)
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo);
                 break;
         }
     }
 
-    // Bu metot şimdilik çağrılmıyor, savaş sistemi eklenince kullanılacak.
+    /// <summary>
+    /// Bu kalenin fethedilme işlemini gerçekleştirir.
+    /// </summary>
     public void Conquer()
     {
-        isPlayerBase = true; // Artık bu da oyuncunun bir üssü
-        castleData = null;
+        isPlayerBase = true; // Artık bu kale de oyuncunun.
+        castleData = null;   // Düşman verisi artık gereksiz.
         SetState(CastleState.PlayerOwned);
 
-        // WorldMapManager'a haber vererek yeni yolları açmasını sağla
+        // WorldMapManager'a haber vererek yeni yolları açmasını sağla.
         if (WorldMapManager.Instance != null)
         {
             WorldMapManager.Instance.UnlockAdjacentCastles(this);
         }
     }
-    // -------------------------
 
+    // Bu metot, oyuncunun ana üssünün görselini ve asker gücünü senkronize etmek için kullanılır.
     public void SyncWithPlayerData(LevelData currentLevelData)
     {
         if (!isPlayerBase) return;
@@ -133,35 +123,7 @@ public class Castle : MonoBehaviour
             spriteRenderer.sprite = currentLevelData.houseSprite;
         }
 
-        if (SoldierManager.Instance != null)
-        {
-            this.ArmySize = SoldierManager.Instance.GetTotalSoldierCount();
-            this.ArmyHealth = SoldierManager.Instance.TotalHealth;
-            this.ArmyAttack = SoldierManager.Instance.TotalAttack;
-        }
-    }
-
-    private void LoadFromEnemyData()
-    {
-        if (isPlayerBase || castleData == null) return;
-
-        ArmySize = 0;
-        ArmyHealth = 0;
-        ArmyAttack = 0;
-
-        foreach (var armyUnit in castleData.armyComposition)
-        {
-            if (armyUnit.soldierData != null && armyUnit.count > 0)
-            {
-                ArmySize += armyUnit.count;
-                ArmyHealth += (long)armyUnit.soldierData.health * armyUnit.count;
-                ArmyAttack += (long)armyUnit.soldierData.attack * armyUnit.count;
-            }
-        }
-
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.sprite = castleData.castleSprite;
-        }
+        // Asker gücü artık MapUIController tarafından PopulateSoldierList içinde yönetiliyor.
+        // Bu metot şimdilik sadece görsel güncelleme için kalabilir.
     }
 }

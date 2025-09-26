@@ -46,6 +46,7 @@ public class BattleManager : MonoBehaviour
 
     private MapUIController uiController;
     private List<SoldierData> allSoldierTypes;
+    private Castle castleBeingFought; // Saldırı yapılan kalenin referansı
 
     private void Awake()
     {
@@ -58,11 +59,12 @@ public class BattleManager : MonoBehaviour
         uiController = controller;
     }
 
-    public void StartBattle(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy, List<SoldierData> allTypes)
+    public void StartBattle(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy, List<SoldierData> allTypes, Castle targetCastle)
     {
         if (uiController == null) return;
 
         allSoldierTypes = allTypes;
+        castleBeingFought = targetCastle; // Saldırılan kaleyi hafızaya al
 
         PrepareArmies(playerArmy, enemyArmy);
         if (playerArmyQueue.Count == 0 || enemyArmyQueue.Count == 0)
@@ -125,34 +127,31 @@ public class BattleManager : MonoBehaviour
     {
         bool playerWon = (currentPlayer != null && currentEnemy == null);
 
-        UpdateArmyRecordsAfterBattle(playerWon);
+        if (playerWon)
+        {
+            // Eğer oyuncu kazandıysa, WorldMapManager'a fetih işlemini başlatması için haber ver.
+            if (WorldMapManager.Instance != null && castleBeingFought != null)
+            {
+                WorldMapManager.Instance.ConquerCastle(castleBeingFought);
+            }
+        }
 
+        UpdateArmyRecordsAfterBattle(playerWon);
         uiController.ShowResultPanel(playerWon);
     }
 
     private void UpdateArmyRecordsAfterBattle(bool playerWon)
     {
-        if (allSoldierTypes == null)
-        {
-            Debug.LogError("allSoldierTypes listesi null, kayıtlar güncellenemedi!");
-            return;
-        }
+        if (allSoldierTypes == null) return;
 
         if (playerWon)
         {
             var survivingSoldiers = new Dictionary<string, int>();
-
-            if (currentPlayer != null)
-            {
-                playerArmyQueue.Enqueue(currentPlayer.soldierData);
-            }
+            if (currentPlayer != null) { playerArmyQueue.Enqueue(currentPlayer.soldierData); }
 
             foreach (var soldier in playerArmyQueue)
             {
-                if (!survivingSoldiers.ContainsKey(soldier.soldierName))
-                {
-                    survivingSoldiers[soldier.soldierName] = 0;
-                }
+                if (!survivingSoldiers.ContainsKey(soldier.soldierName)) { survivingSoldiers[soldier.soldierName] = 0; }
                 survivingSoldiers[soldier.soldierName]++;
             }
 
@@ -164,23 +163,12 @@ public class BattleManager : MonoBehaviour
         }
         else
         {
-            foreach (var type in allSoldierTypes)
-            {
-                PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, 0);
-            }
+            foreach (var type in allSoldierTypes) { PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, 0); }
         }
 
         PlayerPrefs.Save();
-        Debug.Log("Asker kayıtları savaş sonucuna göre güncellendi.");
 
-        // --- TEK VE ÖNEMLİ DEĞİŞİKLİK BURADA ---
-        // PlayerPrefs güncellendikten sonra, hafızadaki SoldierManager'a da
-        // verilerini bu yeni PlayerPrefs'ten tazelemesini söylüyoruz.
-        if (SoldierManager.Instance != null)
-        {
-            SoldierManager.Instance.RefreshDataFromPrefs();
-        }
-        // ------------------------------------
+        if (SoldierManager.Instance != null) { SoldierManager.Instance.RefreshDataFromPrefs(); }
     }
 
     private void LoadNextPlayerSoldier()
