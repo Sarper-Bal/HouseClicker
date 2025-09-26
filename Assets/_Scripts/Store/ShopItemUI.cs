@@ -1,66 +1,36 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System;
-using DG.Tweening;
 
 public class ShopItemUI : MonoBehaviour
 {
-    [Header("UI Elemanları")]
+    [Header("UI Referansları")]
     [SerializeField] private Image soldierIcon;
     [SerializeField] private TextMeshProUGUI soldierNameText;
-    [SerializeField] private TextMeshProUGUI healthText;
-    [SerializeField] private TextMeshProUGUI attackText;
     [SerializeField] private TextMeshProUGUI costText;
     [SerializeField] private Button buyButton;
-    [SerializeField] private TextMeshProUGUI ownedCountText; // YENİ: Sahip olunan sayıyı gösteren metin
 
     private SoldierData soldierData;
-    private Action<SoldierData> onBuyAction;
+    private ShopController shopController;
 
-    public void Setup(SoldierData data, Action<SoldierData> buyAction)
+    public void Setup(SoldierData data, ShopController controller)
     {
-        this.soldierData = data;
-        this.onBuyAction = buyAction;
+        soldierData = data;
+        shopController = controller;
 
         soldierIcon.sprite = soldierData.shopIcon;
         soldierNameText.text = soldierData.soldierName;
-        healthText.text = soldierData.health.ToString();
-        attackText.text = soldierData.attack.ToString();
-        costText.text = soldierData.cost.ToString("N0");
+        costText.text = soldierData.cost.ToString();
 
-        buyButton.onClick.AddListener(HandleBuyClick);
-
-        UpdateButtonState();
-        UpdateOwnedCount(); // Başlangıçta sahip olunan sayıyı güncelle
+        buyButton.onClick.AddListener(OnBuyButtonClicked);
     }
 
-    private void HandleBuyClick()
+    private void OnBuyButtonClicked()
     {
-        onBuyAction?.Invoke(soldierData);
-        buyButton.transform.DOPunchScale(Vector3.one * 0.1f, 0.2f);
-    }
-
-    public void UpdateButtonState()
-    {
-        if (CurrencyManager.Instance != null && soldierData != null)
+        if (shopController != null && soldierData != null)
         {
-            buyButton.interactable = CurrencyManager.Instance.CurrentGold >= soldierData.cost;
+            // DEĞİŞİKLİK: Artık string ve cost yerine direkt SoldierData'yı gönderiyoruz.
+            shopController.BuySoldier(soldierData);
         }
-    }
-
-    // YENİ FONKSİYON: SoldierManager'dan alınan bilgiyle sahip olunan asker sayısını günceller.
-    public void UpdateOwnedCount()
-    {
-        if (SoldierManager.Instance != null && soldierData != null && ownedCountText != null)
-        {
-            int count = SoldierManager.Instance.GetSoldierCount(soldierData.soldierName);
-            ownedCountText.text = count.ToString();
-        }
-    }
-
-    private void OnDestroy()
-    {
-        buyButton.onClick.RemoveAllListeners();
     }
 }

@@ -1,10 +1,17 @@
 using UnityEngine;
+using TMPro;
 using System;
 
 public class CurrencyManager : MonoBehaviour
 {
-    // --- Singleton Pattern (Sahneye Özel) ---
     public static CurrencyManager Instance { get; private set; }
+
+    public long CurrentGold { get; private set; }
+
+    // Para miktarı değiştiğinde UI'ı güncellemek için bir event
+    public event Action<long> OnGoldChanged;
+    public event Action<long> OnPassiveGoldAdded;
+
 
     private void Awake()
     {
@@ -15,68 +22,71 @@ public class CurrencyManager : MonoBehaviour
         else
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
     }
-    // --- Singleton Pattern Sonu ---
-
-    public long CurrentGold { get; private set; }
-
-    // Genel altın değişiklikleri için (UI güncellemeleri vb.)
-    public event Action<long> OnGoldChanged;
-
-    // --- HATA DÜZELTMESİ ---
-    // FloatingTextManager'ın ihtiyaç duyduğu, sadece pasif gelir eklendiğinde tetiklenecek olan olay.
-    public event Action<long> OnPassiveGoldAdded;
-    // --- HATA DÜZELTMESİ SONU ---
-
-    private const string GoldSaveKey = "CurrentGold";
 
     private void Start()
     {
         LoadGold();
-        // Başlangıçta UI'ın doğru değeri göstermesi için event'i tetikle.
-        OnGoldChanged?.Invoke(CurrentGold);
     }
 
-    // Tıklama, bonus gibi anlık ve aktif kazançlar için bu metodu kullan.
+    /// <summary>
+    /// Oyuncunun altınını artırır.
+    /// </summary>
     public void AddGold(long amount)
     {
         if (amount <= 0) return;
         CurrentGold += amount;
-        OnGoldChanged?.Invoke(CurrentGold);
+        OnGoldChanged?.Invoke(CurrentGold); // Event'i tetikle
         SaveGold();
     }
-
-    // --- YENİ EKLENEN METOD ---
-    // Sadece pasif gelir ekleyen script'lerin bu metodu çağırması gerekiyor.
     public void AddPassiveGold(long amount)
     {
-        if (amount <= 0) return;
         CurrentGold += amount;
-        OnGoldChanged?.Invoke(CurrentGold); // Genel UI'ın da güncellenmesi için bu event'i tetikliyoruz.
-        OnPassiveGoldAdded?.Invoke(amount); // FloatingTextManager için özel event'i tetikliyoruz.
-        SaveGold();
-    }
-    // --- YENİ METOD SONU ---
-
-    public void SpendGold(long amount)
-    {
-        if (amount <= 0 || amount > CurrentGold) return;
-        CurrentGold -= amount;
+        OnPassiveGoldAdded?.Invoke(amount);
         OnGoldChanged?.Invoke(CurrentGold);
         SaveGold();
+    }
+    /// <summary>
+    /// Belirtilen miktarda altın harcamaya çalışır.
+    /// </summary>
+    /// <returns>Harcama başarılıysa true, bakiye yetersizse false döner.</returns>
+    public bool SpendGold(long amount)
+    {
+        if (amount <= 0) return false;
+
+        if (CurrentGold >= amount)
+        {
+            CurrentGold -= amount;
+            OnGoldChanged?.Invoke(CurrentGold); // Event'i tetikle
+            SaveGold();
+            return true; // Harcama başarılı
+        }
+        else
+        {
+            Debug.Log("Yetersiz altın!");
+            return false; // Harcama başarısız
+        }
     }
 
     private void SaveGold()
     {
-        PlayerPrefs.SetString(GoldSaveKey, CurrentGold.ToString());
+        PlayerPrefs.SetString("CurrentGold", CurrentGold.ToString());
         PlayerPrefs.Save();
     }
 
     private void LoadGold()
     {
-        string savedGold = PlayerPrefs.GetString(GoldSaveKey, "0");
-        long.TryParse(savedGold, out long loadedGold);
-        CurrentGold = loadedGold;
+        string goldStr = PlayerPrefs.GetString("CurrentGold", "0");
+        if (long.TryParse(goldStr, out long savedGold))
+        {
+            CurrentGold = savedGold;
+        }
+        else
+        {
+            CurrentGold = 0;
+        }
+        OnGoldChanged?.Invoke(CurrentGold); // UI'ı başlangıçta güncelle
     }
 }

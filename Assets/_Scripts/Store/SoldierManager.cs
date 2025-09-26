@@ -1,21 +1,18 @@
 using UnityEngine;
-using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public class SoldierManager : MonoBehaviour
 {
     public static SoldierManager Instance { get; private set; }
 
-    [Header("Asker Veritabanı")]
-    [Tooltip("Oyunda var olan TÜM asker türlerinin ScriptableObject'lerini buraya sürükleyin.")]
+    [Header("Asker Türleri")]
     public List<SoldierData> allSoldierTypes;
+
+    private Dictionary<string, int> soldierCounts = new Dictionary<string, int>();
 
     public long TotalHealth { get; private set; }
     public long TotalAttack { get; private set; }
-
-    private Dictionary<string, int> soldiersOwned = new Dictionary<string, int>();
-
-    public event Action OnSoldierDataChanged;
 
     private void Awake()
     {
@@ -27,88 +24,65 @@ public class SoldierManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            LoadSoldiers(); // Oyun açıldığında verileri yükle
+            LoadSoldiers();
         }
     }
 
-    public void AddSoldier(SoldierData soldierData)
+    // DEĞİŞİKLİK: Metot artık string yerine SoldierData alıyor.
+    public void AddSoldier(SoldierData soldierData, int amount)
     {
-        if (soldierData == null) return;
+        string name = soldierData.soldierName; // İsim garantili olarak SO'dan geliyor.
 
-        string soldierName = soldierData.soldierName;
-
-        if (!soldiersOwned.ContainsKey(soldierName))
+        if (!soldierCounts.ContainsKey(name))
         {
-            soldiersOwned[soldierName] = 0;
+            soldierCounts[name] = 0;
         }
-
-        soldiersOwned[soldierName]++;
-
-        TotalHealth += soldierData.health;
-        TotalAttack += soldierData.attack;
-
-        Debug.Log($"{soldierName} orduya katıldı. Bu birimden mevcut: {soldiersOwned[soldierName]}");
-
-        SaveSoldiers();
-        OnSoldierDataChanged?.Invoke();
+        soldierCounts[name] += amount;
+        SetSoldierCount(name, soldierCounts[name]);
     }
 
-    public int GetSoldierCount(string soldierName)
+    private void SetSoldierCount(string name, int count)
     {
-        return soldiersOwned.ContainsKey(soldierName) ? soldiersOwned[soldierName] : 0;
+        soldierCounts[name] = count;
+        PlayerPrefs.SetInt("SoldierCount_" + name, count);
+        PlayerPrefs.Save();
+        RecalculateArmyStats();
+    }
+
+    public int GetSoldierCount(string name)
+    {
+        return soldierCounts.ContainsKey(name) ? soldierCounts[name] : 0;
     }
 
     public int GetTotalSoldierCount()
     {
-        int total = 0;
-        foreach (int count in soldiersOwned.Values)
-        {
-            total += count;
-        }
-        return total;
-    }
-
-    private void SaveSoldiers()
-    {
-        // Sözlükteki her bir askeri "Soldier_Piyade" gibi bir anahtarla kaydet
-        foreach (var pair in soldiersOwned)
-        {
-            PlayerPrefs.SetInt("Soldier_" + pair.Key, pair.Value);
-        }
-
-        PlayerPrefs.SetString("TotalHealth", TotalHealth.ToString());
-        PlayerPrefs.SetString("TotalAttack", TotalAttack.ToString());
-        PlayerPrefs.Save(); // PlayerPrefs'in hemen kaydedildiğinden emin olmak için
+        return soldierCounts.Values.Sum();
     }
 
     private void LoadSoldiers()
     {
-        // --- DÜZELTME BURADA ---
-        // Yüklemeden önce mevcut verileri sıfırla
-        soldiersOwned.Clear();
+        soldierCounts.Clear();
+        foreach (var soldierData in allSoldierTypes)
+        {
+            int count = PlayerPrefs.GetInt("SoldierCount_" + soldierData.soldierName, 0);
+            soldierCounts[soldierData.soldierName] = count;
+        }
+        RecalculateArmyStats();
+    }
+
+    private void RecalculateArmyStats()
+    {
         TotalHealth = 0;
         TotalAttack = 0;
 
-        // Tanımladığımız tüm asker türlerini döngüye al
-        foreach (SoldierData soldierType in allSoldierTypes)
+        foreach (var soldierData in allSoldierTypes)
         {
-            string key = "Soldier_" + soldierType.soldierName;
-
-            // Bu asker türü için kayıtlı bir veri var mı diye kontrol et
-            if (PlayerPrefs.HasKey(key))
+            int count = GetSoldierCount(soldierData.soldierName);
+            if (count > 0)
             {
-                int count = PlayerPrefs.GetInt(key);
-                if (count > 0)
-                {
-                    // Kayıtlı askerleri ve istatistiklerini yükle
-                    soldiersOwned[soldierType.soldierName] = count;
-                    TotalHealth += (long)count * soldierType.health;
-                    TotalAttack += (long)count * soldierType.attack;
-                }
+                TotalHealth += (long)soldierData.health * count;
+                TotalAttack += (long)soldierData.attack * count;
             }
         }
-
-        // --- DÜZELTME SONU ---
-        Debug.Log($"Asker verileri yüklendi. Toplam Asker: {GetTotalSoldierCount()}, Sağlık: {TotalHealth}, Saldırı: {TotalAttack}");
     }
 }

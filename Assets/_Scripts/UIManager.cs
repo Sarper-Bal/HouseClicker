@@ -15,8 +15,9 @@ public class UIManager : MonoBehaviour
     [Header("Panel References")]
     [SerializeField] private GameObject miniGamesMainPanel;
     [SerializeField] private Button openMiniGamesButton;
-    // Mağaza butonu referansı, eğer Inspector'da atandıysa kullanılabilir.
-    // [SerializeField] private Button openShopButton; 
+    [SerializeField] private GameObject shopPanel; // --- YENİ EKLENDİ ---
+    [SerializeField] private Button openShopButton; // --- YENİ EKLENDİ ---
+    [SerializeField] private Button closeShopButton; // --- YENİ EKLENDİ ---
 
     [Header("Sahne Geçiş")]
     [SerializeField] private Button goToMapButton;
@@ -32,23 +33,34 @@ public class UIManager : MonoBehaviour
             upgradeButtonOriginalScale = upgradeButton.transform.localScale;
         }
 
+        // Event Listeners
         if (CurrencyManager.Instance != null)
             CurrencyManager.Instance.OnGoldChanged += UpdateGoldText;
         if (UpgradeManager.Instance != null)
             UpgradeManager.Instance.OnLevelUp += UpdateLevelUI;
 
+        // Button Clicks
         if (upgradeButton != null)
             upgradeButton.onClick.AddListener(() => UpgradeManager.Instance.AttemptUpgrade());
 
         if (openMiniGamesButton != null)
             openMiniGamesButton.onClick.AddListener(OpenMiniGamesPanel);
-        if (miniGamesMainPanel != null)
-            miniGamesMainPanel.SetActive(false);
 
         if (goToMapButton != null)
-        {
             goToMapButton.onClick.AddListener(GoToMapScene);
-        }
+
+        // --- YENİ EKLENEN BUTON OLAYLARI ---
+        if (openShopButton != null)
+            openShopButton.onClick.AddListener(OpenShopPanel);
+        if (closeShopButton != null)
+            closeShopButton.onClick.AddListener(CloseShopPanel);
+        // ------------------------------------
+
+        // Panelleri başlangıçta gizle
+        if (miniGamesMainPanel != null)
+            miniGamesMainPanel.SetActive(false);
+        if (shopPanel != null)
+            shopPanel.SetActive(false); // --- YENİ EKLENDİ ---
 
         InitializeUI();
     }
@@ -65,6 +77,24 @@ public class UIManager : MonoBehaviour
             buttonPulseAnimation.Kill();
         }
     }
+
+    // --- YENİ EKLENEN PANEL KONTROL FONKSİYONLARI ---
+    private void OpenShopPanel()
+    {
+        if (shopPanel != null)
+        {
+            shopPanel.SetActive(true);
+        }
+    }
+
+    private void CloseShopPanel()
+    {
+        if (shopPanel != null)
+        {
+            shopPanel.SetActive(false);
+        }
+    }
+    // -----------------------------------------------
 
     private void GoToMapScene()
     {
@@ -144,7 +174,6 @@ public class UIManager : MonoBehaviour
             {
                 buttonPulseAnimation = DOTween.Sequence()
                     .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 1.1f, 0.4f).SetEase(Ease.OutQuad))
-                    // --- HATA DÜZELTMESİ BURADA ---
                     .Append(upgradeButton.transform.DOScale(upgradeButtonOriginalScale * 0.98f, 0.8f).SetEase(Ease.InOutQuad))
                     .SetLoops(-1, LoopType.Yoyo);
             }

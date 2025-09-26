@@ -10517,14 +10517,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 457a14196133b4faf8dc1d38eea0c725, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopController
-  soldiersToSell:
+  shopItemContainer: {fileID: 273729739}
+  shopItemPrefab: {fileID: 1741290815198974256, guid: 23b0845606471425a8a0cfc456da819f, type: 3}
+  availableSoldiers:
   - {fileID: 11400000, guid: ef77b86151aa14f56acd7ecd99495a79, type: 2}
   - {fileID: 11400000, guid: 090a929b002e446969ac24a6fe782605, type: 2}
-  shopPanel: {fileID: 1847148703}
-  closeButton: {fileID: 1719998644}
-  totalSoldiersText: {fileID: 8508656}
-  contentParent: {fileID: 273729739}
-  shopItemPrefab: {fileID: 1741290815198974256, guid: 23b0845606471425a8a0cfc456da819f, type: 3}
 --- !u!114 &1847148706
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11238,6 +11235,9 @@ MonoBehaviour:
   upgradeButtonText: {fileID: 161655246}
   miniGamesMainPanel: {fileID: 0}
   openMiniGamesButton: {fileID: 0}
+  shopPanel: {fileID: 1847148703}
+  openShopButton: {fileID: 1915979761}
+  closeShopButton: {fileID: 1719998644}
   goToMapButton: {fileID: 1714690161}
 --- !u!4 &2068825872
 Transform:

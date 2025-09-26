@@ -1868,7 +1868,7 @@ MonoBehaviour:
   playerSpawnPoint: {fileID: 50729765}
   enemySpawnPoint: {fileID: 169575508}
   battleSoldierPrefab: {fileID: 4448595331915981003, guid: ec883de3d155a4ae4ae338798ea19a36, type: 3}
-  turnDelay: 10
+  turnDelay: 1
 --- !u!4 &1166439858
 Transform:
   m_ObjectHideFlags: 0
