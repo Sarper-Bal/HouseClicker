@@ -2546,7 +2546,7 @@ MonoBehaviour:
     healthText: {fileID: 967243311}
     attackText: {fileID: 924163312}
     displayParent: {fileID: 722364408}
-  turnDelay: 1
+  turnDelay: 3
 --- !u!4 &1166439858
 Transform:
   m_ObjectHideFlags: 0

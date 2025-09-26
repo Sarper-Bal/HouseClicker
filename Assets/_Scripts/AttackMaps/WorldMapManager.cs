@@ -40,30 +40,31 @@ public class WorldMapManager : MonoBehaviour
         }
     }
 
+    // --- GÜNCELLENEN FONKSİYON ---
     public void InitiateBattle()
     {
         if (selectedCastle == null || selectedCastle.isPlayerBase) return;
 
         List<SoldierData> playerArmy = GetPlayerArmyFromSave();
 
-        // --- YENİ GÜVENLİK KONTROLÜ ---
         if (playerArmy.Count == 0)
         {
             Debug.LogError("Oyuncu ordusu boş! Savaşa girilemez. 'WorldMapManager' Inspector'ündeki 'All Soldier Types' listesini kontrol et.");
-            return; // Ordu boşsa savaşı başlatma
+            return;
         }
-        // --------------------------------
 
         List<EnemyArmyUnit> enemyArmy = selectedCastle.castleData.armyComposition;
-        BattleManager.Instance.StartBattle(playerArmy, enemyArmy);
+
+        // BattleManager'a tüm asker türlerinin listesini de gönderiyoruz.
+        BattleManager.Instance.StartBattle(playerArmy, enemyArmy, allSoldierTypes);
     }
+    // ----------------------------
 
     private List<SoldierData> GetPlayerArmyFromSave()
     {
         List<SoldierData> army = new List<SoldierData>();
         if (allSoldierTypes == null || allSoldierTypes.Count == 0)
         {
-            // Bu log, en olası hata kaynağını bize söyleyecek.
             Debug.LogError("'All Soldier Types' listesi WorldMapManager'da atanmamış!");
             return army;
         }

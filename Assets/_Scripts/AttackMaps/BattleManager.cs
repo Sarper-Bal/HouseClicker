@@ -3,8 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq; // Dictionary kullanabilmek için
 
-// --- YENİ YARDIMCI CLASS ---
 // Savaş alanındaki bir askerin anlık durumunu tutmak için.
 public class BattleParticipant
 {
@@ -17,7 +17,6 @@ public class BattleParticipant
         currentHealth = data.health;
     }
 }
-// -------------------------
 
 public class BattleManager : MonoBehaviour
 {
@@ -29,7 +28,7 @@ public class BattleManager : MonoBehaviour
         public Image soldierImage;
         public TextMeshProUGUI healthText;
         public TextMeshProUGUI attackText;
-        public GameObject displayParent; // Bütün display'i açıp kapamak için
+        public GameObject displayParent;
     }
 
     [Header("UI Referansları")]
@@ -46,6 +45,7 @@ public class BattleManager : MonoBehaviour
     private BattleParticipant currentEnemy;
 
     private MapUIController uiController;
+    private List<SoldierData> allSoldierTypes; // --- YENİ EKLENDİ ---
 
     private void Awake()
     {
@@ -58,9 +58,12 @@ public class BattleManager : MonoBehaviour
         uiController = controller;
     }
 
-    public void StartBattle(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy)
+    // --- GÜNCELLENEN METOT İMZASI ---
+    public void StartBattle(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy, List<SoldierData> allTypes)
     {
         if (uiController == null) return;
+
+        allSoldierTypes = allTypes; // --- YENİ EKLENDİ ---
 
         PrepareArmies(playerArmy, enemyArmy);
         if (playerArmyQueue.Count == 0 || enemyArmyQueue.Count == 0)
@@ -96,17 +99,16 @@ public class BattleManager : MonoBehaviour
         {
             yield return new WaitForSeconds(turnDelay);
 
-            // Saldırı Aşaması
             currentEnemy.currentHealth -= currentPlayer.soldierData.attack;
             UpdateDisplay(enemyDisplay, currentEnemy);
 
             if (currentEnemy.currentHealth <= 0)
             {
                 LoadNextEnemySoldier();
-                continue; // Düşman öldü, oyuncunun hasar almasını beklemeden turu bitir.
+                continue;
             }
 
-            yield return new WaitForSeconds(0.2f); // Karşılık verme hissi için küçük bir bekleme
+            yield return new WaitForSeconds(0.2f);
 
             currentPlayer.currentHealth -= currentEnemy.soldierData.attack;
             UpdateDisplay(playerDisplay, currentPlayer);
@@ -120,6 +122,71 @@ public class BattleManager : MonoBehaviour
         EndBattle();
     }
 
+    private void EndBattle()
+    {
+        bool playerWon = (currentPlayer != null && currentEnemy == null);
+
+        // --- YENİ EKLENEN SATIR ---
+        UpdateArmyRecordsAfterBattle(playerWon);
+        // -------------------------
+
+        uiController.ShowResultPanel(playerWon);
+    }
+
+    // --- TAMAMEN YENİ FONKSİYON ---
+    /// <summary>
+    /// Savaş sonucuna göre oyuncunun asker kayıtlarını PlayerPrefs'te günceller.
+    /// </summary>
+    private void UpdateArmyRecordsAfterBattle(bool playerWon)
+    {
+        if (allSoldierTypes == null)
+        {
+            Debug.LogError("allSoldierTypes listesi null, kayıtlar güncellenemedi!");
+            return;
+        }
+
+        if (playerWon)
+        {
+            // Kazandıysa: Hayatta kalanları say ve kaydet.
+            var survivingSoldiers = new Dictionary<string, int>();
+
+            // Savaşta ölmeyen son askeri de listeye ekle
+            if (currentPlayer != null)
+            {
+                playerArmyQueue.Enqueue(currentPlayer.soldierData);
+            }
+
+            // Kuyrukta kalan tüm askerleri say
+            foreach (var soldier in playerArmyQueue)
+            {
+                if (!survivingSoldiers.ContainsKey(soldier.soldierName))
+                {
+                    survivingSoldiers[soldier.soldierName] = 0;
+                }
+                survivingSoldiers[soldier.soldierName]++;
+            }
+
+            // Tüm asker türlerini döngüye al ve PlayerPrefs'i güncelle
+            foreach (var type in allSoldierTypes)
+            {
+                int newCount = survivingSoldiers.ContainsKey(type.soldierName) ? survivingSoldiers[type.soldierName] : 0;
+                PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, newCount);
+            }
+        }
+        else
+        {
+            // Kaybettiyse: Tüm askerleri sıfırla.
+            foreach (var type in allSoldierTypes)
+            {
+                PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, 0);
+            }
+        }
+
+        PlayerPrefs.Save(); // Değişiklikleri diske kaydet
+        Debug.Log("Asker kayıtları savaş sonucuna göre güncellendi.");
+    }
+    // ----------------------------
+
     private void LoadNextPlayerSoldier()
     {
         if (playerArmyQueue.Count > 0)
@@ -130,7 +197,7 @@ public class BattleManager : MonoBehaviour
         else
         {
             currentPlayer = null;
-            playerDisplay.displayParent.SetActive(false); // Oyuncunun askeri bitti, display'i kapat
+            playerDisplay.displayParent.SetActive(false);
         }
     }
 
@@ -144,30 +211,18 @@ public class BattleManager : MonoBehaviour
         else
         {
             currentEnemy = null;
-            enemyDisplay.displayParent.SetActive(false); // Düşmanın askeri bitti, display'i kapat
+            enemyDisplay.displayParent.SetActive(false);
         }
     }
 
-    // Display'i güncelleyen ana fonksiyon
     private void UpdateDisplay(SoldierDisplayUI display, BattleParticipant participant, bool isNew = false)
     {
         if (!display.displayParent.activeSelf) display.displayParent.SetActive(true);
-
-        // Sadece canı güncelle
         display.healthText.text = participant.currentHealth.ToString();
-
-        // Eğer yeni bir asker geldiyse, diğer bilgileri de güncelle
         if (isNew)
         {
             display.soldierImage.sprite = participant.soldierData.shopIcon;
             display.attackText.text = participant.soldierData.attack.ToString();
         }
-    }
-
-    private void EndBattle()
-    {
-        // Kazanan, mevcut askeri kalan taraftır.
-        bool playerWon = (currentPlayer != null && currentEnemy == null);
-        uiController.ShowResultPanel(playerWon);
     }
 }

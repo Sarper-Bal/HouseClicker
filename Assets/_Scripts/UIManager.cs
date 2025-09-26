@@ -15,9 +15,9 @@ public class UIManager : MonoBehaviour
     [Header("Panel References")]
     [SerializeField] private GameObject miniGamesMainPanel;
     [SerializeField] private Button openMiniGamesButton;
-    [SerializeField] private GameObject shopPanel; // --- YENİ EKLENDİ ---
-    [SerializeField] private Button openShopButton; // --- YENİ EKLENDİ ---
-    [SerializeField] private Button closeShopButton; // --- YENİ EKLENDİ ---
+    [SerializeField] private GameObject shopPanel;
+    [SerializeField] private Button openShopButton;
+    [SerializeField] private Button closeShopButton;
 
     [Header("Sahne Geçiş")]
     [SerializeField] private Button goToMapButton;
@@ -32,6 +32,14 @@ public class UIManager : MonoBehaviour
         {
             upgradeButtonOriginalScale = upgradeButton.transform.localScale;
         }
+
+        // --- YENİ EKLENEN SATIR ---
+        // Sahne her yüklendiğinde SoldierManager'ın verilerini tazelemesini sağla.
+        if (SoldierManager.Instance != null)
+        {
+            SoldierManager.Instance.RefreshDataFromPrefs();
+        }
+        // -------------------------
 
         // Event Listeners
         if (CurrencyManager.Instance != null)
@@ -49,18 +57,16 @@ public class UIManager : MonoBehaviour
         if (goToMapButton != null)
             goToMapButton.onClick.AddListener(GoToMapScene);
 
-        // --- YENİ EKLENEN BUTON OLAYLARI ---
         if (openShopButton != null)
             openShopButton.onClick.AddListener(OpenShopPanel);
         if (closeShopButton != null)
             closeShopButton.onClick.AddListener(CloseShopPanel);
-        // ------------------------------------
 
         // Panelleri başlangıçta gizle
         if (miniGamesMainPanel != null)
             miniGamesMainPanel.SetActive(false);
         if (shopPanel != null)
-            shopPanel.SetActive(false); // --- YENİ EKLENDİ ---
+            shopPanel.SetActive(false);
 
         InitializeUI();
     }
@@ -78,7 +84,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // --- YENİ EKLENEN PANEL KONTROL FONKSİYONLARI ---
     private void OpenShopPanel()
     {
         if (shopPanel != null)
@@ -94,7 +99,6 @@ public class UIManager : MonoBehaviour
             shopPanel.SetActive(false);
         }
     }
-    // -----------------------------------------------
 
     private void GoToMapScene()
     {

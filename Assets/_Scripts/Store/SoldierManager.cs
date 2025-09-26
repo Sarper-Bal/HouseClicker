@@ -31,7 +31,23 @@ public class SoldierManager : MonoBehaviour
         }
     }
 
-    // Metot artık string yerine SoldierData alıyor.
+    // --- TAMAMEN YENİ FONKSİYON ---
+    /// <summary>
+    /// PlayerPrefs'teki güncel verileri okuyarak asker sayılarını tazeler.
+    /// </summary>
+    public void RefreshDataFromPrefs()
+    {
+        Debug.Log("SoldierManager verileri PlayerPrefs'ten tazeliyor...");
+        LoadSoldiers();
+
+        // UI'ın da güncellenmesi için event'leri tetikle
+        foreach (var soldier in soldierCounts)
+        {
+            OnSoldierCountChanged?.Invoke(soldier.Key, soldier.Value);
+        }
+    }
+    // ----------------------------
+
     public void AddSoldier(SoldierData soldierData, int amount)
     {
         string name = soldierData.soldierName;
