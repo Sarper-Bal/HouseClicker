@@ -96,10 +96,10 @@ public class WorldMapManager : MonoBehaviour
         }
         else if (castle.CurrentState == CastleState.Attackable)
         {
-            // Debug.Log yerine artık düşman paneli açılıyor.
             if (castle.castleData != null)
             {
-                uiController.ShowEnemyCastlePanel(castle.castleData);
+                // UI Controller'a panelin açılmasını söylerken, kalenin saldırılabilir (true) olduğunu da bildiriyoruz.
+                uiController.ShowEnemyCastlePanel(castle.castleData, true);
             }
         }
     }

@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic; // List kullanabilmek için eklendi
+using System.Collections.Generic;
 
 public class MapUIController : MonoBehaviour
 {
     [Header("Panel Referansları")]
     [SerializeField] private GameObject playerCastlePanel;
-    [SerializeField] private GameObject enemyCastlePanel; // --- YENİ EKLENDİ ---
+    [SerializeField] private GameObject enemyCastlePanel;
 
     [Header("Oyuncu Kalesi Paneli UI")]
     [Tooltip("Asker listesi elemanlarının (prefab) oluşturulacağı parent obje.")]
@@ -16,12 +16,11 @@ public class MapUIController : MonoBehaviour
     [SerializeField] private GameObject soldierListItemPrefab;
     [SerializeField] private Button closePlayerPanelButton;
 
-    // --- YENİ EKLENEN KISIM ---
     [Header("Düşman Kalesi Paneli UI")]
     [SerializeField] private TextMeshProUGUI enemyCastleNameText;
     [SerializeField] private Transform enemySoldierListContent;
     [SerializeField] private Button closeEnemyPanelButton;
-    // -------------------------
+    [SerializeField] private Button attackButton; // --- YENİ EKLENDİ ---
 
     [Header("Genel Butonlar")]
     [SerializeField] private Button backToMainSceneButton;
@@ -30,15 +29,18 @@ public class MapUIController : MonoBehaviour
     {
         // Butonların tıklama olaylarını ayarla
         closePlayerPanelButton.onClick.AddListener(HideAllPanels);
-        closeEnemyPanelButton.onClick.AddListener(HideAllPanels); // --- YENİ EKLENDİ ---
+        closeEnemyPanelButton.onClick.AddListener(HideAllPanels);
         backToMainSceneButton.onClick.AddListener(() => SceneLoader.Instance.LoadMainScene());
+
+        // AttackButton'a şimdilik sadece bir log mesajı ekleyelim.
+        if (attackButton != null)
+        {
+            attackButton.onClick.AddListener(() => Debug.Log("Saldır butonuna tıklandı! Savaş sistemi gelecekte eklenecek."));
+        }
 
         HideAllPanels(); // Başlangıçta tüm panelleri gizle
     }
 
-    /// <summary>
-    /// Oyuncu kalesi bilgi panelini, sahip olunan askerlerin listesiyle birlikte gösterir.
-    /// </summary>
     public void ShowPlayerCastlePanel()
     {
         HideAllPanels();
@@ -46,14 +48,17 @@ public class MapUIController : MonoBehaviour
         PopulateSoldierList();
     }
 
-    // --- YENİ EKLENEN FONKSİYON ---
+    // --- GÜNCELLENEN FONKSİYON ---
     /// <summary>
-    /// Düşman kalesi bilgi panelini, verilen kale verilerine göre doldurarak gösterir.
+    /// Düşman kalesi bilgi panelini gösterir ve kalenin durumuna göre 'Saldır' butonunu ayarlar.
     /// </summary>
-    public void ShowEnemyCastlePanel(EnemyCastleData castleData)
+    public void ShowEnemyCastlePanel(EnemyCastleData castleData, bool isAttackable)
     {
         HideAllPanels();
         enemyCastlePanel.SetActive(true);
+
+        // Butonun tıklanabilirliğini ayarla
+        attackButton.interactable = isAttackable;
 
         if (castleData != null)
         {
@@ -63,9 +68,6 @@ public class MapUIController : MonoBehaviour
     }
     // -------------------------
 
-    /// <summary>
-    /// SoldierManager'daki verilere göre sahip olunan askerlerin listesini UI'da oluşturur.
-    /// </summary>
     private void PopulateSoldierList()
     {
         foreach (Transform child in soldierListContent)
@@ -94,10 +96,6 @@ public class MapUIController : MonoBehaviour
         }
     }
 
-    // --- YENİ EKLENEN FONKSİYON ---
-    /// <summary>
-    /// Verilen düşman kalesi verilerine göre asker listesini UI'da oluşturur.
-    /// </summary>
     private void PopulateEnemySoldierList(EnemyCastleData castleData)
     {
         foreach (Transform child in enemySoldierListContent)
@@ -120,11 +118,10 @@ public class MapUIController : MonoBehaviour
             }
         }
     }
-    // -------------------------
 
     public void HideAllPanels()
     {
         playerCastlePanel.SetActive(false);
-        enemyCastlePanel.SetActive(false); // --- YENİ EKLENDİ ---
+        enemyCastlePanel.SetActive(false);
     }
 }
