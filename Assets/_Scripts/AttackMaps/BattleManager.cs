@@ -1,39 +1,56 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq; // Enumerable.Any() kullanabilmek için eklendi
+
+// --- YENİ YARDIMCI CLASS ---
+// Savaş alanındaki bir askerin anlık durumunu tutmak için.
+public class BattleParticipant
+{
+    public SoldierData soldierData;
+    public long currentHealth;
+
+    public BattleParticipant(SoldierData data)
+    {
+        soldierData = data;
+        currentHealth = data.health;
+    }
+}
+// -------------------------
 
 public class BattleManager : MonoBehaviour
 {
     public static BattleManager Instance { get; private set; }
 
-    [Header("Savaş Alanı Referansları")]
-    [SerializeField] private Transform playerSpawnPoint;
-    [SerializeField] private Transform enemySpawnPoint;
-    [SerializeField] private GameObject battleSoldierPrefab;
+    [System.Serializable]
+    public class SoldierDisplayUI
+    {
+        public Image soldierImage;
+        public TextMeshProUGUI healthText;
+        public TextMeshProUGUI attackText;
+        public GameObject displayParent; // Bütün display'i açıp kapamak için
+    }
+
+    [Header("UI Referansları")]
+    [SerializeField] private SoldierDisplayUI playerDisplay;
+    [SerializeField] private SoldierDisplayUI enemyDisplay;
 
     [Header("Savaş Ayarları")]
-    [Tooltip("Her tur arası bekleme süresi (saniye).")]
     [SerializeField] private float turnDelay = 1.0f;
 
     private Queue<SoldierData> playerArmyQueue = new Queue<SoldierData>();
     private Queue<SoldierData> enemyArmyQueue = new Queue<SoldierData>();
 
-    private BattleSoldier currentPlayerSoldier;
-    private BattleSoldier currentEnemySoldier;
+    private BattleParticipant currentPlayer;
+    private BattleParticipant currentEnemy;
 
     private MapUIController uiController;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-        }
-        else
-        {
-            Instance = this;
-        }
+        if (Instance != null && Instance != this) { Destroy(gameObject); }
+        else { Instance = this; }
     }
 
     public void SetUIController(MapUIController controller)
@@ -43,25 +60,15 @@ public class BattleManager : MonoBehaviour
 
     public void StartBattle(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy)
     {
-        if (uiController == null)
-        {
-            Debug.LogError("MapUIController referansı atanmamış!");
-            return;
-        }
+        if (uiController == null) return;
 
         PrepareArmies(playerArmy, enemyArmy);
-
-        // --- YENİ GÜVENLİK KONTROLÜ ---
-        // Ordulardan herhangi biri boşsa savaşı başlatma.
         if (playerArmyQueue.Count == 0 || enemyArmyQueue.Count == 0)
         {
             Debug.LogError("Savaş başlatılamadı! Ordulardan biri boş.");
-            // Oyuncuyu bilgilendirmek için harita ekranına geri dönebilir veya bir mesaj gösterebiliriz.
-            // Şimdilik sadece panelleri gizleyip işlemi durduruyoruz.
             uiController.HideAllPanels();
             return;
         }
-        // --------------------------------
 
         uiController.ShowBattlePanel();
         StartCoroutine(BattleLoop());
@@ -70,111 +77,97 @@ public class BattleManager : MonoBehaviour
     private void PrepareArmies(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy)
     {
         playerArmyQueue.Clear();
-        foreach (var soldierData in playerArmy)
-        {
-            playerArmyQueue.Enqueue(soldierData);
-        }
+        foreach (var soldierData in playerArmy) { playerArmyQueue.Enqueue(soldierData); }
 
         enemyArmyQueue.Clear();
         foreach (var enemyUnit in enemyArmy)
         {
-            for (int i = 0; i < enemyUnit.count; i++)
-            {
-                enemyArmyQueue.Enqueue(enemyUnit.soldierData);
-            }
+            for (int i = 0; i < enemyUnit.count; i++) { enemyArmyQueue.Enqueue(enemyUnit.soldierData); }
         }
-
-        // --- YENİ DEBUG MESAJLARI ---
-        // Bu mesajlar sayesinde orduların doğru yüklenip yüklenmediğini anlayacağız.
-        Debug.Log($"Savaş hazırlanıyor... Oyuncu askeri sayısı: {playerArmyQueue.Count}, Düşman askeri sayısı: {enemyArmyQueue.Count}");
-        // -----------------------------
+        Debug.Log($"Savaş hazırlanıyor... Oyuncu: {playerArmyQueue.Count}, Düşman: {enemyArmyQueue.Count}");
     }
 
     private IEnumerator BattleLoop()
     {
-        SpawnPlayerSoldier();
-        SpawnEnemySoldier();
+        LoadNextPlayerSoldier();
+        LoadNextEnemySoldier();
 
-        // Daha güvenli bir döngü yapısı
-        while (true)
+        while (currentPlayer != null && currentEnemy != null)
         {
-            // Her turun başında kazanma/kaybetme durumunu kontrol et
-            if (currentPlayerSoldier == null || currentEnemySoldier == null)
-            {
-                break; // Savaş bitti, döngüden çık
-            }
-
             yield return new WaitForSeconds(turnDelay);
 
-            // Oyuncu Düşmana Saldırır
-            if (currentPlayerSoldier != null && currentEnemySoldier != null)
+            // Saldırı Aşaması
+            currentEnemy.currentHealth -= currentPlayer.soldierData.attack;
+            UpdateDisplay(enemyDisplay, currentEnemy);
+
+            if (currentEnemy.currentHealth <= 0)
             {
-                long playerAttack = currentPlayerSoldier.GetAttackPower();
-                currentEnemySoldier.TakeDamage(playerAttack);
+                LoadNextEnemySoldier();
+                continue; // Düşman öldü, oyuncunun hasar almasını beklemeden turu bitir.
             }
 
-            // Düşman Oyuncuya Saldırır (eğer hala hayattaysa)
-            if (currentPlayerSoldier != null && currentEnemySoldier != null)
+            yield return new WaitForSeconds(0.2f); // Karşılık verme hissi için küçük bir bekleme
+
+            currentPlayer.currentHealth -= currentEnemy.soldierData.attack;
+            UpdateDisplay(playerDisplay, currentPlayer);
+
+            if (currentPlayer.currentHealth <= 0)
             {
-                long enemyAttack = currentEnemySoldier.GetAttackPower();
-                currentPlayerSoldier.TakeDamage(enemyAttack);
+                LoadNextPlayerSoldier();
             }
         }
 
         EndBattle();
     }
 
-    private void SpawnPlayerSoldier()
+    private void LoadNextPlayerSoldier()
     {
         if (playerArmyQueue.Count > 0)
         {
-            SoldierData soldierToSpawn = playerArmyQueue.Dequeue();
-            GameObject soldierGO = Instantiate(battleSoldierPrefab, playerSpawnPoint.position, Quaternion.identity, playerSpawnPoint);
-            currentPlayerSoldier = soldierGO.GetComponent<BattleSoldier>();
-            currentPlayerSoldier.Setup(soldierToSpawn);
-            currentPlayerSoldier.OnSoldierDied += OnPlayerSoldierDied;
+            currentPlayer = new BattleParticipant(playerArmyQueue.Dequeue());
+            UpdateDisplay(playerDisplay, currentPlayer, true);
         }
         else
         {
-            currentPlayerSoldier = null;
+            currentPlayer = null;
+            playerDisplay.displayParent.SetActive(false); // Oyuncunun askeri bitti, display'i kapat
         }
     }
 
-    private void SpawnEnemySoldier()
+    private void LoadNextEnemySoldier()
     {
         if (enemyArmyQueue.Count > 0)
         {
-            SoldierData soldierToSpawn = enemyArmyQueue.Dequeue();
-            GameObject soldierGO = Instantiate(battleSoldierPrefab, enemySpawnPoint.position, Quaternion.identity, enemySpawnPoint);
-            currentEnemySoldier = soldierGO.GetComponent<BattleSoldier>();
-            currentEnemySoldier.Setup(soldierToSpawn);
-            currentEnemySoldier.OnSoldierDied += OnEnemySoldierDied;
+            currentEnemy = new BattleParticipant(enemyArmyQueue.Dequeue());
+            UpdateDisplay(enemyDisplay, currentEnemy, true);
         }
         else
         {
-            currentEnemySoldier = null;
+            currentEnemy = null;
+            enemyDisplay.displayParent.SetActive(false); // Düşmanın askeri bitti, display'i kapat
         }
     }
 
-    private void OnPlayerSoldierDied(BattleSoldier soldier)
+    // Display'i güncelleyen ana fonksiyon
+    private void UpdateDisplay(SoldierDisplayUI display, BattleParticipant participant, bool isNew = false)
     {
-        soldier.OnSoldierDied -= OnPlayerSoldierDied;
-        SpawnPlayerSoldier();
-    }
+        if (!display.displayParent.activeSelf) display.displayParent.SetActive(true);
 
-    private void OnEnemySoldierDied(BattleSoldier soldier)
-    {
-        soldier.OnSoldierDied -= OnEnemySoldierDied;
-        SpawnEnemySoldier();
+        // Sadece canı güncelle
+        display.healthText.text = participant.currentHealth.ToString();
+
+        // Eğer yeni bir asker geldiyse, diğer bilgileri de güncelle
+        if (isNew)
+        {
+            display.soldierImage.sprite = participant.soldierData.shopIcon;
+            display.attackText.text = participant.soldierData.attack.ToString();
+        }
     }
 
     private void EndBattle()
     {
-        bool playerWon = (currentPlayerSoldier != null && currentEnemySoldier == null);
-
-        if (currentPlayerSoldier != null) Destroy(currentPlayerSoldier.gameObject);
-        if (currentEnemySoldier != null) Destroy(currentEnemySoldier.gameObject);
-
+        // Kazanan, mevcut askeri kalan taraftır.
+        bool playerWon = (currentPlayer != null && currentEnemy == null);
         uiController.ShowResultPanel(playerWon);
     }
 }
