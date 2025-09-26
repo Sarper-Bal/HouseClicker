@@ -46,7 +46,7 @@ public class BattleManager : MonoBehaviour
 
     private MapUIController uiController;
     private List<SoldierData> allSoldierTypes;
-    private Castle castleBeingFought; // Saldırı yapılan kalenin referansı
+    private Castle castleBeingFought;
 
     private void Awake()
     {
@@ -64,7 +64,7 @@ public class BattleManager : MonoBehaviour
         if (uiController == null) return;
 
         allSoldierTypes = allTypes;
-        castleBeingFought = targetCastle; // Saldırılan kaleyi hafızaya al
+        castleBeingFought = targetCastle;
 
         PrepareArmies(playerArmy, enemyArmy);
         if (playerArmyQueue.Count == 0 || enemyArmyQueue.Count == 0)
@@ -91,37 +91,49 @@ public class BattleManager : MonoBehaviour
         Debug.Log($"Savaş hazırlanıyor... Oyuncu: {playerArmyQueue.Count}, Düşman: {enemyArmyQueue.Count}");
     }
 
+    // --- TAMAMEN YENİLENEN SAVAŞ DÖNGÜSÜ ---
     private IEnumerator BattleLoop()
     {
         LoadNextPlayerSoldier();
         LoadNextEnemySoldier();
 
+        // İki taraftan birinin askeri kalmayana kadar döngü devam eder.
         while (currentPlayer != null && currentEnemy != null)
         {
+            // Turu bekle
             yield return new WaitForSeconds(turnDelay);
 
-            currentEnemy.currentHealth -= currentPlayer.soldierData.attack;
+            // 1. Saldırı güçlerini hasar vermeden önce sakla.
+            long playerAttackPower = currentPlayer.soldierData.attack;
+            long enemyAttackPower = currentEnemy.soldierData.attack;
+
+            // 2. Hasarları aynı anda uygula.
+            currentPlayer.currentHealth -= enemyAttackPower;
+            currentEnemy.currentHealth -= playerAttackPower;
+
+            // 3. UI'ı güncelle.
+            UpdateDisplay(playerDisplay, currentPlayer);
             UpdateDisplay(enemyDisplay, currentEnemy);
 
-            if (currentEnemy.currentHealth <= 0)
-            {
-                LoadNextEnemySoldier();
-                continue;
-            }
+            // 4. Ölen var mı diye kontrol et.
+            // İkisinin de aynı anda ölme ihtimaline karşı ayrı ayrı kontrol ediyoruz.
+            bool playerDied = currentPlayer.currentHealth <= 0;
+            bool enemyDied = currentEnemy.currentHealth <= 0;
 
-            yield return new WaitForSeconds(0.2f);
-
-            currentPlayer.currentHealth -= currentEnemy.soldierData.attack;
-            UpdateDisplay(playerDisplay, currentPlayer);
-
-            if (currentPlayer.currentHealth <= 0)
+            if (playerDied)
             {
                 LoadNextPlayerSoldier();
             }
+            if (enemyDied)
+            {
+                LoadNextEnemySoldier();
+            }
         }
 
+        // Döngü bittiğinde savaşı sonlandır.
         EndBattle();
     }
+    // ------------------------------------
 
     private void EndBattle()
     {
@@ -129,7 +141,6 @@ public class BattleManager : MonoBehaviour
 
         if (playerWon)
         {
-            // Eğer oyuncu kazandıysa, WorldMapManager'a fetih işlemini başlatması için haber ver.
             if (WorldMapManager.Instance != null && castleBeingFought != null)
             {
                 WorldMapManager.Instance.ConquerCastle(castleBeingFought);
@@ -202,7 +213,10 @@ public class BattleManager : MonoBehaviour
     private void UpdateDisplay(SoldierDisplayUI display, BattleParticipant participant, bool isNew = false)
     {
         if (!display.displayParent.activeSelf) display.displayParent.SetActive(true);
-        display.healthText.text = participant.currentHealth.ToString();
+
+        // Can 0'dan küçükse 0 göster.
+        display.healthText.text = participant.currentHealth > 0 ? participant.currentHealth.ToString() : "0";
+
         if (isNew)
         {
             display.soldierImage.sprite = participant.soldierData.shopIcon;
