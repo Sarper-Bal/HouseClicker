@@ -22,12 +22,12 @@ public class ShopController : MonoBehaviour
         }
     }
 
-    // DEĞİŞİKLİK: Metot artık string ve long yerine SoldierData alıyor.
+    // Metot artık string/long yerine SoldierData alıyor.
     public void BuySoldier(SoldierData soldierData)
     {
         if (CurrencyManager.Instance.SpendGold(soldierData.cost))
         {
-            // SoldierManager'a da doğrudan SoldierData'yı iletiyoruz.
+            // SoldierManager'a da SoldierData gönderiyoruz, bu hatayı düzeltecek.
             SoldierManager.Instance.AddSoldier(soldierData, 1);
         }
         else

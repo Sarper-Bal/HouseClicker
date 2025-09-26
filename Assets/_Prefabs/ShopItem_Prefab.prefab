@@ -756,11 +756,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItemUI
   soldierIcon: {fileID: 993257257911745851}
   soldierNameText: {fileID: 5632016116677462189}
-  healthText: {fileID: 8302213256370525807}
-  attackText: {fileID: 2739480778645256616}
   costText: {fileID: 2960635867354081413}
   buyButton: {fileID: 257187171449517093}
-  ownedCountText: {fileID: 7016403680428939077}
+  attackText: {fileID: 2739480778645256616}
+  healthText: {fileID: 8302213256370525807}
+  currentCountText: {fileID: 7016403680428939077}
 --- !u!1 &2616233690343161994
 GameObject:
   m_ObjectHideFlags: 0

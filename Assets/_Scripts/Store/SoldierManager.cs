@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 public class SoldierManager : MonoBehaviour
 {
@@ -8,6 +9,8 @@ public class SoldierManager : MonoBehaviour
 
     [Header("Asker Türleri")]
     public List<SoldierData> allSoldierTypes;
+
+    public event Action<string, int> OnSoldierCountChanged;
 
     private Dictionary<string, int> soldierCounts = new Dictionary<string, int>();
 
@@ -28,10 +31,10 @@ public class SoldierManager : MonoBehaviour
         }
     }
 
-    // DEĞİŞİKLİK: Metot artık string yerine SoldierData alıyor.
+    // Metot artık string yerine SoldierData alıyor.
     public void AddSoldier(SoldierData soldierData, int amount)
     {
-        string name = soldierData.soldierName; // İsim garantili olarak SO'dan geliyor.
+        string name = soldierData.soldierName;
 
         if (!soldierCounts.ContainsKey(name))
         {
@@ -47,6 +50,8 @@ public class SoldierManager : MonoBehaviour
         PlayerPrefs.SetInt("SoldierCount_" + name, count);
         PlayerPrefs.Save();
         RecalculateArmyStats();
+
+        OnSoldierCountChanged?.Invoke(name, count);
     }
 
     public int GetSoldierCount(string name)
