@@ -17,3 +17,5 @@ MonoBehaviour:
   armyComposition:
   - soldierData: {fileID: 11400000, guid: ef77b86151aa14f56acd7ecd99495a79, type: 2}
     count: 2
+  - soldierData: {fileID: 11400000, guid: 090a929b002e446969ac24a6fe782605, type: 2}
+    count: 5
