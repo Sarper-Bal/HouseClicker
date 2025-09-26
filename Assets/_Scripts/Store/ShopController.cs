@@ -1,121 +1,42 @@
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using System.Collections.Generic;
 
 public class ShopController : MonoBehaviour
 {
-    [Header("Mağaza Ayarları")]
-    [SerializeField] private List<SoldierData> soldiersToSell;
-
-    [Header("UI Elemanları")]
-    [SerializeField] private GameObject shopPanel;
-    [SerializeField] private Button closeButton;
-    [SerializeField] private TextMeshProUGUI totalSoldiersText; // "Toplam Asker" metni
-
-    [Header("Liste Yapısı")]
-    [SerializeField] private Transform contentParent;
+    [Header("Referanslar")]
+    [SerializeField] private Transform shopItemContainer;
     [SerializeField] private GameObject shopItemPrefab;
-
-    private List<ShopItemUI> spawnedShopItems = new List<ShopItemUI>();
+    [SerializeField] private SoldierData[] availableSoldiers;
 
     private void Start()
     {
-        closeButton.onClick.AddListener(ClosePanel);
-        shopPanel.SetActive(false);
-    }
-
-    public void ShowPanel()
-    {
-        shopPanel.SetActive(true);
         PopulateShop();
-        UpdateTotalSoldierCount();
-    }
-
-    private void OnEnable()
-    {
-        if (SoldierManager.Instance != null)
-            SoldierManager.Instance.OnSoldierDataChanged += OnSoldierDataChanged;
-        if (CurrencyManager.Instance != null)
-            CurrencyManager.Instance.OnGoldChanged += UpdateAllButtonStates;
-    }
-
-    private void OnDisable()
-    {
-        if (SoldierManager.Instance != null)
-            SoldierManager.Instance.OnSoldierDataChanged -= OnSoldierDataChanged;
-        if (CurrencyManager.Instance != null)
-            CurrencyManager.Instance.OnGoldChanged -= UpdateAllButtonStates;
-    }
-
-    // Asker verisi değiştiğinde hem toplamı hem de bireysel sayıları günceller.
-    private void OnSoldierDataChanged()
-    {
-        UpdateTotalSoldierCount();
-        UpdateAllOwnedCounts();
     }
 
     private void PopulateShop()
     {
-        foreach (Transform child in contentParent)
+        foreach (var soldierData in availableSoldiers)
         {
-            Destroy(child.gameObject);
-        }
-        spawnedShopItems.Clear();
-
-        foreach (SoldierData soldier in soldiersToSell)
-        {
-            GameObject itemGO = Instantiate(shopItemPrefab, contentParent);
+            GameObject itemGO = Instantiate(shopItemPrefab, shopItemContainer);
             ShopItemUI shopItem = itemGO.GetComponent<ShopItemUI>();
-
-            if (shopItem != null)
-            {
-                shopItem.Setup(soldier, BuySoldier);
-                spawnedShopItems.Add(shopItem);
-            }
+            shopItem.Setup(soldierData, this);
         }
     }
 
-    private void BuySoldier(SoldierData soldierToBuy)
+    /// <summary>
+    /// Bir asker satın alma işlemini gerçekleştirir.
+    /// </summary>
+    public void BuySoldier(SoldierData soldierData)
     {
-        if (CurrencyManager.Instance == null || SoldierManager.Instance == null) return;
-
-        long cost = soldierToBuy.cost;
-        if (CurrencyManager.Instance.CurrentGold >= cost)
+        if (CurrencyManager.Instance.SpendGold(soldierData.cost))
         {
-            CurrencyManager.Instance.SpendGold(cost);
-            // Artık AddSoldiers yerine AddSoldier kullanıyoruz ve SoldierData'yı gönderiyoruz.
-            SoldierManager.Instance.AddSoldier(soldierToBuy);
+            // --- DEĞİŞTİRİLEN SATIR ---
+            // Artık string adı yerine doğrudan SoldierData objesini gönderiyoruz.
+            SoldierManager.Instance.AddSoldier(soldierData, 1);
+            // -------------------------
         }
-    }
-
-    private void UpdateTotalSoldierCount()
-    {
-        if (SoldierManager.Instance != null)
+        else
         {
-            totalSoldiersText.text = SoldierManager.Instance.GetTotalSoldierCount().ToString();
+            Debug.Log("Altın yetersiz!");
         }
-    }
-
-    // YENİ FONKSİYON: Listedeki tüm ürünlerin sahip olunan asker sayısını günceller.
-    private void UpdateAllOwnedCounts()
-    {
-        foreach (var item in spawnedShopItems)
-        {
-            item.UpdateOwnedCount();
-        }
-    }
-
-    private void UpdateAllButtonStates(long newGoldAmount)
-    {
-        foreach (var item in spawnedShopItems)
-        {
-            item.UpdateButtonState();
-        }
-    }
-
-    private void ClosePanel()
-    {
-        shopPanel.SetActive(false);
     }
 }
