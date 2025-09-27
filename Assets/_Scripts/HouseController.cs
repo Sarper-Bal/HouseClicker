@@ -22,18 +22,13 @@ public class HouseController : MonoBehaviour, IPointerDownHandler
         originalColor = houseSpriteRenderer.color;
     }
 
-    // --- YENİ EKLENEN FONKSİYON ---
-    // Bu obje (ve sahne) yok olmadan hemen önce çalışır.
     private void OnDestroy()
     {
-        // Çalışan bir animasyon varsa, sahne değişmeden önce onu güvenli bir şekilde durdur.
-        // Bu, "missing target" hatasını çözecektir.
         if (clickSequence != null)
         {
             clickSequence.Kill();
         }
     }
-    // --- YENİ KISIM SONU ---
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -95,5 +90,20 @@ public class HouseController : MonoBehaviour, IPointerDownHandler
         Sequence shockwaveSequence = DOTween.Sequence();
         shockwaveSequence.Append(shockwaveInstance.transform.DOScale(originalScale * 2f, 0.5f));
         shockwaveSequence.Join(swRenderer.DOFade(0, 0.5f).SetEase(Ease.InQuad));
+    }
+
+    // --- YENİ EKLENEN METOT ---
+    /// <summary>
+    /// UIManager tarafından çağrılarak, mevcut seviye verisine göre
+    /// evin sprite'ını ve diğer görsellerini günceller.
+    /// </summary>
+    public void UpdateVisuals(LevelData currentLevelData)
+    {
+        // LevelData'da evin sprite'ını tutan bir 'houseSprite' alanı olduğunu varsayıyoruz.
+        // Kendi projenizdeki alan adıyla (örneğin 'levelSprite') değiştirebilirsiniz.
+        if (currentLevelData != null && houseSpriteRenderer != null && currentLevelData.houseSprite != null)
+        {
+            houseSpriteRenderer.sprite = currentLevelData.houseSprite;
+        }
     }
 }

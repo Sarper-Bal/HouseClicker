@@ -4,84 +4,114 @@ using DG.Tweening;
 
 public class FloatingTextManager : MonoBehaviour
 {
-    [Header("Genel Ayarlar")]
+    [Header("Temel Ayarlar")]
+    [Tooltip("Ekranda belirecek yazı prefab'ı (TextMeshProUGUI objesi olmalı).")]
     [SerializeField] private GameObject floatingTextPrefab;
-    [SerializeField] private Canvas mainCanvas;
+    [Tooltip("Yaratılan tüm yazıların altında toplanacağı, Canvas'a bağlı boş bir obje.")]
+    [SerializeField] private Transform textParentCanvas;
 
-    [Header("Tıklama Metni Ayarları")]
+    [Header("Spawn Noktaları")]
+    [Tooltip("Tıklama sonrası altın yazısının çıkacağı nokta.")]
     [SerializeField] private Transform clickSpawnPoint;
-    [SerializeField] private Color clickTextColor = Color.yellow;
-
-    [Header("Pasif Gelir Metni Ayarları")]
+    [Tooltip("Pasif gelir yazısının çıkacağı nokta.")]
     [SerializeField] private Transform passiveSpawnPoint;
-    [SerializeField] private Color passiveTextColor = Color.white;
 
-    [Header("Animasyon Ayarları")]
-    [SerializeField] private float moveDistance = 150f;
-    [SerializeField] private float duration = 1.5f;
+    // --- YENİ EKLENEN KISIM: Inspector'dan Ayarlanabilir Renkler ---
+    [Header("Renk Ayarları")]
+    [SerializeField] private Color clickTextColor = Color.yellow;
+    [SerializeField] private Color passiveTextColor = Color.green;
+    // ----------------------------------------------------------------
+
+    private Camera mainCamera;
+    private HouseController houseControllerRef;
 
     void Start()
     {
-        // Bu script (ve MainScene) yüklendiğinde event'leri dinlemeye başla
-        if (HouseController.FindObjectOfType<HouseController>() != null)
+        mainCamera = Camera.main;
+
+        if (floatingTextPrefab == null || textParentCanvas == null)
         {
-            HouseController.FindObjectOfType<HouseController>().OnClickedForGold += HandleClickIncome;
+            Debug.LogError("FloatingTextManager üzerinde 'Floating Text Prefab' veya 'Text Parent Canvas' atanmamış!", this.gameObject);
+            return;
+        }
+
+        houseControllerRef = FindObjectOfType<HouseController>();
+        if (houseControllerRef != null)
+        {
+            houseControllerRef.OnClickedForGold += HandleClickGold;
         }
 
         if (CurrencyManager.Instance != null)
         {
-            CurrencyManager.Instance.OnPassiveGoldAdded += HandlePassiveIncome;
+            CurrencyManager.Instance.OnPassiveGoldAdded += HandlePassiveGold;
         }
     }
 
     void OnDestroy()
     {
-        // Bu script (ve MainScene) yok edildiğinde event'leri dinlemeyi bırak
-        if (HouseController.FindObjectOfType<HouseController>() != null)
+        if (houseControllerRef != null)
         {
-            HouseController.FindObjectOfType<HouseController>().OnClickedForGold -= HandleClickIncome;
+            houseControllerRef.OnClickedForGold -= HandleClickGold;
         }
 
         if (CurrencyManager.Instance != null)
         {
-            CurrencyManager.Instance.OnPassiveGoldAdded -= HandlePassiveIncome;
-            // CurrencyManager.Instance.StopPassiveIncome(); satırı buradan kaldırıldı.
+            CurrencyManager.Instance.OnPassiveGoldAdded -= HandlePassiveGold;
         }
     }
 
-    private void HandleClickIncome(long amount)
+    private void HandleClickGold(long amount)
     {
-        if (clickSpawnPoint == null) return;
-        ShowFloatingText($"+{amount}", clickSpawnPoint.position, clickTextColor);
+        string text = "+ " + FormatNumber(amount);
+        // Tıklama için Inspector'dan ayarlanan rengi kullan.
+        CreateFloatingText(text, clickTextColor, clickSpawnPoint);
     }
 
-    private void HandlePassiveIncome(long amount)
+    private void HandlePassiveGold(long amount)
     {
-        if (passiveSpawnPoint == null) return;
-        ShowFloatingText($"+{amount}", passiveSpawnPoint.position, passiveTextColor);
+        // --- İSTEĞİN ÜZERİNE "(Pasif)" YAZISI KALDIRILDI ---
+        string text = "+ " + FormatNumber(amount);
+        // Pasif gelir için Inspector'dan ayarlanan rengi kullan.
+        CreateFloatingText(text, passiveTextColor, passiveSpawnPoint);
     }
 
-    private void ShowFloatingText(string message, Vector3 worldPosition, Color color)
+    private void CreateFloatingText(string text, Color color, Transform spawnPoint)
     {
-        if (mainCanvas == null || floatingTextPrefab == null) return;
+        if (mainCamera == null)
+        {
+            return;
+        }
 
-        Vector2 screenPosition = Camera.main.WorldToScreenPoint(worldPosition);
+        if (floatingTextPrefab == null) return;
 
-        GameObject textObject = Instantiate(floatingTextPrefab, mainCanvas.transform);
-        textObject.transform.position = screenPosition;
+        Transform actualSpawnPoint = (spawnPoint != null) ? spawnPoint : this.transform;
 
-        TextMeshProUGUI tmpText = textObject.GetComponent<TextMeshProUGUI>();
-        tmpText.text = message;
-        tmpText.color = color;
+        GameObject textGO = Instantiate(floatingTextPrefab, textParentCanvas);
+
+        Vector3 worldPosition = actualSpawnPoint.position;
+        Vector2 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
+        textGO.transform.position = screenPosition;
+
+        TextMeshProUGUI textMesh = textGO.GetComponent<TextMeshProUGUI>();
+        if (textMesh == null)
+        {
+            Debug.LogError("Floating Text Prefab'ında TextMeshProUGUI component'i bulunamadı!", textGO);
+            return;
+        }
+
+        textMesh.text = text;
+        textMesh.color = color;
 
         Sequence sequence = DOTween.Sequence();
-        sequence.Append(textObject.transform.DOMoveY(screenPosition.y + moveDistance, duration).SetEase(Ease.OutQuad));
-        sequence.Join(tmpText.DOFade(0, duration).SetEase(Ease.InQuad));
-        sequence.SetLink(textObject);
-        sequence.OnComplete(() =>
-        {
-            if (textObject != null)
-                Destroy(textObject);
-        });
+        sequence.Append(textGO.transform.DOMoveY(textGO.transform.position.y + 100f, 1.2f).SetEase(Ease.OutQuad));
+        sequence.Join(textMesh.DOFade(0, 1.2f).SetEase(Ease.InQuad));
+        sequence.OnComplete(() => Destroy(textGO));
+    }
+
+    private string FormatNumber(long num)
+    {
+        if (num >= 1000)
+            return (num / 1000D).ToString("0.#") + "K";
+        return num.ToString();
     }
 }

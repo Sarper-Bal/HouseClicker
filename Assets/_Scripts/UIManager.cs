@@ -22,6 +22,16 @@ public class UIManager : MonoBehaviour
     [Header("Sahne Geçiş")]
     [SerializeField] private Button goToMapButton;
 
+    [Header("Sahne İçi Referanslar")]
+    [Tooltip("Sahnedeki HouseController'ı buraya sürükleyin.")]
+    [SerializeField] private HouseController houseController;
+
+    // --- YENİ EKLENEN SATIR ---
+    [Tooltip("Sahnedeki VisualManager'ı buraya sürükleyin.")]
+    [SerializeField] private VisualManager visualManager;
+    // -------------------------
+
+
     private long displayedGold = 0;
     private Tween buttonPulseAnimation;
     private Vector3 upgradeButtonOriginalScale;
@@ -33,13 +43,10 @@ public class UIManager : MonoBehaviour
             upgradeButtonOriginalScale = upgradeButton.transform.localScale;
         }
 
-        // --- YENİ EKLENEN SATIR ---
-        // Sahne her yüklendiğinde SoldierManager'ın verilerini tazelemesini sağla.
         if (SoldierManager.Instance != null)
         {
             SoldierManager.Instance.RefreshDataFromPrefs();
         }
-        // -------------------------
 
         // Event Listeners
         if (CurrencyManager.Instance != null)
@@ -62,7 +69,6 @@ public class UIManager : MonoBehaviour
         if (closeShopButton != null)
             closeShopButton.onClick.AddListener(CloseShopPanel);
 
-        // Panelleri başlangıçta gizle
         if (miniGamesMainPanel != null)
             miniGamesMainPanel.SetActive(false);
         if (shopPanel != null)
@@ -86,18 +92,12 @@ public class UIManager : MonoBehaviour
 
     private void OpenShopPanel()
     {
-        if (shopPanel != null)
-        {
-            shopPanel.SetActive(true);
-        }
+        if (shopPanel != null) shopPanel.SetActive(true);
     }
 
     private void CloseShopPanel()
     {
-        if (shopPanel != null)
-        {
-            shopPanel.SetActive(false);
-        }
+        if (shopPanel != null) shopPanel.SetActive(false);
     }
 
     private void GoToMapScene()
@@ -114,17 +114,27 @@ public class UIManager : MonoBehaviour
 
     private void OpenMiniGamesPanel()
     {
-        if (miniGamesMainPanel != null)
-        {
-            miniGamesMainPanel.SetActive(true);
-        }
+        if (miniGamesMainPanel != null) miniGamesMainPanel.SetActive(true);
     }
 
     private void InitializeUI()
     {
         if (UpgradeManager.Instance != null && UpgradeManager.Instance.GetCurrentLevelData() != null)
         {
-            levelText.text = "Seviye: " + (UpgradeManager.Instance.GetCurrentLevelData().levelIndex + 1);
+            LevelData currentLevelData = UpgradeManager.Instance.GetCurrentLevelData();
+            levelText.text = "Seviye: " + (currentLevelData.levelIndex + 1);
+
+            if (houseController != null)
+            {
+                houseController.UpdateVisuals(currentLevelData);
+            }
+            // --- YENİ EKLENEN KISIM ---
+            // VisualManager'a da başlangıç verisini göndererek kozmetik objeleri yüklemesini sağla.
+            if (visualManager != null)
+            {
+                visualManager.InitializeVisuals(currentLevelData);
+            }
+            // --------------------------
         }
         if (CurrencyManager.Instance != null)
         {
@@ -150,6 +160,12 @@ public class UIManager : MonoBehaviour
         if (newLevelData == null) return;
         levelText.text = "Seviye: " + (newLevelData.levelIndex + 1);
         UpdateUpgradeButton();
+
+        // --- HATA DÜZELTMESİ: ÇÖKMEYİ ENGELLEMEK İÇİN NULL KONTROLÜ EKLENDİ ---
+        if (houseController != null)
+        {
+            houseController.UpdateVisuals(newLevelData);
+        }
     }
 
     private void UpdateUpgradeButton()

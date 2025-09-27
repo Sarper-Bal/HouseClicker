@@ -3629,9 +3629,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c9f4a8c99f6e4f2681e0f472df16d47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VisualManager
-  houseSpriteRenderer: {fileID: 217994039}
-  spriteTransitionDuration: 0.25
-  cosmeticAppearDuration: 0.5
+  cosmeticsParent: {fileID: 304471911}
 --- !u!114 &602810374
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3644,14 +3642,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26421d90e39304ca8a350ed2ab991a46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FloatingTextManager
-  floatingTextPrefab: {fileID: 8805417149581794817, guid: 6baa7f6ca28fc49af957a16e90624f40, type: 3}
-  mainCanvas: {fileID: 1620078862}
+  floatingTextPrefab: {fileID: 5497419740989474015, guid: c1f2acf34ad4546e7a1bc99d70c8faaa, type: 3}
+  textParentCanvas: {fileID: 1371493485}
   clickSpawnPoint: {fileID: 1031365296}
-  clickTextColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   passiveSpawnPoint: {fileID: 148114033}
+  clickTextColor: {r: 0.9607844, g: 0.9607844, b: 0.9607844, a: 1}
   passiveTextColor: {r: 1, g: 1, b: 1, a: 1}
-  moveDistance: 150
-  duration: 1.5
 --- !u!1 &614916775
 GameObject:
   m_ObjectHideFlags: 0
@@ -7447,6 +7443,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1311786310}
   m_CullTransparentMesh: 1
+--- !u!1 &1371493484
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1371493485}
+  m_Layer: 5
+  m_Name: _FloatingTextContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1371493485
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1371493484}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1620078863}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1390089313
 GameObject:
   m_ObjectHideFlags: 0
@@ -9517,6 +9548,7 @@ RectTransform:
   - {fileID: 1777358473}
   - {fileID: 844149743}
   - {fileID: 1847148704}
+  - {fileID: 1371493485}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -11694,6 +11726,8 @@ MonoBehaviour:
   openShopButton: {fileID: 1915979761}
   closeShopButton: {fileID: 1719998644}
   goToMapButton: {fileID: 1714690161}
+  houseController: {fileID: 217994038}
+  visualManager: {fileID: 0}
 --- !u!4 &2068825872
 Transform:
   m_ObjectHideFlags: 0
