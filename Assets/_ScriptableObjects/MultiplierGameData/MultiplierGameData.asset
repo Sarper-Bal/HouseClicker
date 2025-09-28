@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a03f6571a9bc44f3aaa9b77cfeda2018, type: 3}
   m_Name: MultiplierGameData
   m_EditorClassIdentifier: Assembly-CSharp::MultiplierGameData
-  gameName: "\xC7arpan Kutular\u0131"
-  baseBetAmount: 5
-  amountPerLevel: 5
+  gameName: Multiplier
+  baseBetAmount: 50
+  amountPerLevel: 10
   positiveMultipliers:
   - 1.5
   - 2

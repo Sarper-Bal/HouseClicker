@@ -53,7 +53,7 @@ public class WorldMapManager : MonoBehaviour
 
         if (playerArmy.Count == 0)
         {
-            Debug.LogError("Oyuncu ordusu boş! Savaşa girilemez.");
+            Debug.Log("Oyuncu ordusu boş! Savaşa girilemez.");
             return;
         }
 
