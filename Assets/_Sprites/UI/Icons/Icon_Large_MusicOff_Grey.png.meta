@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: b0b58cfe988cf46f79e009591843eb4d
+guid: 93c3f76dc999c44b888c54cc03c10c80
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8758840269561937352
-    second: IconButton_Large_Red_Square_0
+      213: 913241057414470111
+    second: Icon_Large_MusicOff_Grey_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: IconButton_Large_Red_Square_0
+      name: Icon_Large_MusicOff_Grey_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 358
-        height: 357
+        width: 240
+        height: 249
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8cd30af91d6ad8970800000000000000
-      internalID: 8758840269561937352
+      spriteID: fd9dd7537eb7cac00800000000000000
+      internalID: 913241057414470111
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      IconButton_Large_Red_Square_0: 8758840269561937352
+      Icon_Large_MusicOff_Grey_0: 913241057414470111
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

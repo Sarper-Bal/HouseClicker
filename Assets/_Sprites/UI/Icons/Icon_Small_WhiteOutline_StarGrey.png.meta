@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: a3894c0da118a45c9a7556469e99d622
+guid: bc0b5f730db3b42d788f0b3faaef530f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2525790602213427026
-    second: IconButton_Large_Red_Circle_0
+      213: 1471430692787304710
+    second: Icon_Small_WhiteOutline_StarGrey_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: IconButton_Large_Red_Circle_0
+      name: Icon_Small_WhiteOutline_StarGrey_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 355
-        height: 357
+        width: 193
+        height: 186
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ea87c0a54d692fcd0800000000000000
-      internalID: -2525790602213427026
+      spriteID: 609b13b4b629b6410800000000000000
+      internalID: 1471430692787304710
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      IconButton_Large_Red_Circle_0: -2525790602213427026
+      Icon_Small_WhiteOutline_StarGrey_0: 1471430692787304710
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
