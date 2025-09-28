@@ -11727,7 +11727,7 @@ MonoBehaviour:
   closeShopButton: {fileID: 1719998644}
   goToMapButton: {fileID: 1714690161}
   houseController: {fileID: 217994038}
-  visualManager: {fileID: 0}
+  visualManager: {fileID: 602810373}
 --- !u!4 &2068825872
 Transform:
   m_ObjectHideFlags: 0
