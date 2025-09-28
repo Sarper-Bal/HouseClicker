@@ -15,5 +15,5 @@ MonoBehaviour:
   soldierName: Piyade
   shopIcon: {fileID: 21300000, guid: be66adc6fbc3b4b5384913579a9e0e34, type: 3}
   cost: 10
-  health: 2
-  attack: 6
+  health: 6
+  attack: 1

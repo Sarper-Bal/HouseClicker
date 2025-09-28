@@ -402,7 +402,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &481119002
 RectTransform:
   m_ObjectHideFlags: 0
@@ -664,6 +664,7 @@ GameObject:
   - component: {fileID: 628503602}
   - component: {fileID: 628503604}
   - component: {fileID: 628503603}
+  - component: {fileID: 628503605}
   m_Layer: 5
   m_Name: SoldierImage
   m_TagString: Untagged
@@ -728,6 +729,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 628503601}
   m_CullTransparentMesh: 1
+--- !u!114 &628503605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 628503601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98404bcc3bd5848179fb22643d376570, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleAnimator
+  characterImage: {fileID: 628503603}
+  attackPunchDirection: {x: -50, y: 0}
+  deathEjectDirection: {x: 100, y: 50}
 --- !u!1 &666439306
 GameObject:
   m_ObjectHideFlags: 0
@@ -957,6 +973,7 @@ GameObject:
   - component: {fileID: 708681591}
   - component: {fileID: 708681593}
   - component: {fileID: 708681592}
+  - component: {fileID: 708681594}
   m_Layer: 5
   m_Name: SoldierImage
   m_TagString: Untagged
@@ -1021,6 +1038,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 708681590}
   m_CullTransparentMesh: 1
+--- !u!114 &708681594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708681590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98404bcc3bd5848179fb22643d376570, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleAnimator
+  characterImage: {fileID: 708681592}
+  attackPunchDirection: {x: 50, y: 0}
+  deathEjectDirection: {x: -100, y: 50}
 --- !u!1 &722364408
 GameObject:
   m_ObjectHideFlags: 0
@@ -2546,6 +2578,8 @@ MonoBehaviour:
     healthText: {fileID: 967243311}
     attackText: {fileID: 924163312}
     displayParent: {fileID: 722364408}
+  playerAnimator: {fileID: 708681594}
+  enemyAnimator: {fileID: 628503605}
   turnDelay: 3
 --- !u!4 &1166439858
 Transform:

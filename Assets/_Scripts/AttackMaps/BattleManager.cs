@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using DG.Tweening;
 
 // Savaş alanındaki bir askerin anlık durumunu tutmak için.
 public class BattleParticipant
@@ -35,6 +35,10 @@ public class BattleManager : MonoBehaviour
     [SerializeField] private SoldierDisplayUI playerDisplay;
     [SerializeField] private SoldierDisplayUI enemyDisplay;
 
+    [Header("Animasyon Referansları")]
+    [SerializeField] private BattleAnimator playerAnimator;
+    [SerializeField] private BattleAnimator enemyAnimator;
+
     [Header("Savaş Ayarları")]
     [SerializeField] private float turnDelay = 1.0f;
 
@@ -62,10 +66,8 @@ public class BattleManager : MonoBehaviour
     public void StartBattle(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy, List<SoldierData> allTypes, Castle targetCastle)
     {
         if (uiController == null) return;
-
         allSoldierTypes = allTypes;
         castleBeingFought = targetCastle;
-
         PrepareArmies(playerArmy, enemyArmy);
         if (playerArmyQueue.Count == 0 || enemyArmyQueue.Count == 0)
         {
@@ -73,8 +75,8 @@ public class BattleManager : MonoBehaviour
             uiController.HideAllPanels();
             return;
         }
-
         uiController.ShowBattlePanel();
+        StopAllCoroutines();
         StartCoroutine(BattleLoop());
     }
 
@@ -88,52 +90,69 @@ public class BattleManager : MonoBehaviour
         {
             for (int i = 0; i < enemyUnit.count; i++) { enemyArmyQueue.Enqueue(enemyUnit.soldierData); }
         }
-        Debug.Log($"Savaş hazırlanıyor... Oyuncu: {playerArmyQueue.Count}, Düşman: {enemyArmyQueue.Count}");
     }
 
-    // --- TAMAMEN YENİLENEN SAVAŞ DÖNGÜSÜ ---
     private IEnumerator BattleLoop()
     {
         LoadNextPlayerSoldier();
         LoadNextEnemySoldier();
 
-        // İki taraftan birinin askeri kalmayana kadar döngü devam eder.
+        Sequence entranceSequence = DOTween.Sequence();
+        if (currentPlayer != null) entranceSequence.Append(playerAnimator.PlaySpawn());
+        if (currentEnemy != null) entranceSequence.Join(enemyAnimator.PlaySpawn());
+        yield return entranceSequence.WaitForCompletion();
+
         while (currentPlayer != null && currentEnemy != null)
         {
-            // Turu bekle
             yield return new WaitForSeconds(turnDelay);
 
-            // 1. Saldırı güçlerini hasar vermeden önce sakla.
+            // --- HATANIN DÜZELTİLDİĞİ KISIM ---
+            // PlayAttack metotlarından parametreler kaldırıldı.
+            Sequence attackSequence = DOTween.Sequence();
+            attackSequence.Append(playerAnimator.PlayAttack());
+            attackSequence.Join(enemyAnimator.PlayAttack());
+            yield return attackSequence.WaitForCompletion();
+            // ---------------------------------
+
             long playerAttackPower = currentPlayer.soldierData.attack;
             long enemyAttackPower = currentEnemy.soldierData.attack;
 
-            // 2. Hasarları aynı anda uygula.
             currentPlayer.currentHealth -= enemyAttackPower;
             currentEnemy.currentHealth -= playerAttackPower;
 
-            // 3. UI'ı güncelle.
+            Sequence damageSequence = DOTween.Sequence();
+            damageSequence.Append(playerAnimator.PlayTakeDamage());
+            damageSequence.Join(enemyAnimator.PlayTakeDamage());
+
             UpdateDisplay(playerDisplay, currentPlayer);
             UpdateDisplay(enemyDisplay, currentEnemy);
 
-            // 4. Ölen var mı diye kontrol et.
-            // İkisinin de aynı anda ölme ihtimaline karşı ayrı ayrı kontrol ediyoruz.
+            yield return damageSequence.WaitForCompletion();
+
             bool playerDied = currentPlayer.currentHealth <= 0;
             bool enemyDied = currentEnemy.currentHealth <= 0;
 
+            Sequence deathSequence = DOTween.Sequence();
+            if (playerDied) deathSequence.Append(playerAnimator.PlayDeath());
+            if (enemyDied) deathSequence.Join(enemyAnimator.PlayDeath());
+            yield return deathSequence.WaitForCompletion();
+
+            Sequence newSoldierSequence = DOTween.Sequence();
             if (playerDied)
             {
                 LoadNextPlayerSoldier();
+                if (currentPlayer != null) newSoldierSequence.Append(playerAnimator.PlaySpawn());
             }
             if (enemyDied)
             {
                 LoadNextEnemySoldier();
+                if (currentEnemy != null) newSoldierSequence.Join(enemyAnimator.PlaySpawn());
             }
+            yield return newSoldierSequence.WaitForCompletion();
         }
 
-        // Döngü bittiğinde savaşı sonlandır.
         EndBattle();
     }
-    // ------------------------------------
 
     private void EndBattle()
     {
@@ -151,42 +170,12 @@ public class BattleManager : MonoBehaviour
         uiController.ShowResultPanel(playerWon);
     }
 
-    private void UpdateArmyRecordsAfterBattle(bool playerWon)
-    {
-        if (allSoldierTypes == null) return;
-
-        if (playerWon)
-        {
-            var survivingSoldiers = new Dictionary<string, int>();
-            if (currentPlayer != null) { playerArmyQueue.Enqueue(currentPlayer.soldierData); }
-
-            foreach (var soldier in playerArmyQueue)
-            {
-                if (!survivingSoldiers.ContainsKey(soldier.soldierName)) { survivingSoldiers[soldier.soldierName] = 0; }
-                survivingSoldiers[soldier.soldierName]++;
-            }
-
-            foreach (var type in allSoldierTypes)
-            {
-                int newCount = survivingSoldiers.ContainsKey(type.soldierName) ? survivingSoldiers[type.soldierName] : 0;
-                PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, newCount);
-            }
-        }
-        else
-        {
-            foreach (var type in allSoldierTypes) { PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, 0); }
-        }
-
-        PlayerPrefs.Save();
-
-        if (SoldierManager.Instance != null) { SoldierManager.Instance.RefreshDataFromPrefs(); }
-    }
-
     private void LoadNextPlayerSoldier()
     {
         if (playerArmyQueue.Count > 0)
         {
             currentPlayer = new BattleParticipant(playerArmyQueue.Dequeue());
+            playerAnimator.ResetAnimator();
             UpdateDisplay(playerDisplay, currentPlayer, true);
         }
         else
@@ -201,6 +190,7 @@ public class BattleManager : MonoBehaviour
         if (enemyArmyQueue.Count > 0)
         {
             currentEnemy = new BattleParticipant(enemyArmyQueue.Dequeue());
+            enemyAnimator.ResetAnimator();
             UpdateDisplay(enemyDisplay, currentEnemy, true);
         }
         else
@@ -213,14 +203,37 @@ public class BattleManager : MonoBehaviour
     private void UpdateDisplay(SoldierDisplayUI display, BattleParticipant participant, bool isNew = false)
     {
         if (!display.displayParent.activeSelf) display.displayParent.SetActive(true);
-
-        // Can 0'dan küçükse 0 göster.
         display.healthText.text = participant.currentHealth > 0 ? participant.currentHealth.ToString() : "0";
-
         if (isNew)
         {
             display.soldierImage.sprite = participant.soldierData.shopIcon;
             display.attackText.text = participant.soldierData.attack.ToString();
         }
+    }
+
+    private void UpdateArmyRecordsAfterBattle(bool playerWon)
+    {
+        if (allSoldierTypes == null) return;
+        if (playerWon)
+        {
+            var survivingSoldiers = new Dictionary<string, int>();
+            if (currentPlayer != null) { playerArmyQueue.Enqueue(currentPlayer.soldierData); }
+            foreach (var soldier in playerArmyQueue)
+            {
+                if (!survivingSoldiers.ContainsKey(soldier.soldierName)) { survivingSoldiers[soldier.soldierName] = 0; }
+                survivingSoldiers[soldier.soldierName]++;
+            }
+            foreach (var type in allSoldierTypes)
+            {
+                int newCount = survivingSoldiers.ContainsKey(type.soldierName) ? survivingSoldiers[type.soldierName] : 0;
+                PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, newCount);
+            }
+        }
+        else
+        {
+            foreach (var type in allSoldierTypes) { PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, 0); }
+        }
+        PlayerPrefs.Save();
+        if (SoldierManager.Instance != null) { SoldierManager.Instance.RefreshDataFromPrefs(); }
     }
 }

@@ -15,5 +15,5 @@ MonoBehaviour:
   soldierName: Ranger
   shopIcon: {fileID: 21300000, guid: e79b81f4f35454224a1f2f1ba756e455, type: 3}
   cost: 5
-  health: 1
-  attack: 3
+  health: 3
+  attack: 1
