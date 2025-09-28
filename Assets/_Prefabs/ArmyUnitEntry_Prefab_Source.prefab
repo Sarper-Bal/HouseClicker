@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7462894266275578128}
   - component: {fileID: 8090035011874037609}
   m_Layer: 5
-  m_Name: Image
+  m_Name: SoliderIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -87,6 +87,7 @@ GameObject:
   - component: {fileID: 963345724938893715}
   - component: {fileID: 4750153294990112490}
   - component: {fileID: 6793424932158779009}
+  - component: {fileID: -7476931712054618781}
   m_Layer: 5
   m_Name: ArmyUnitEntry_Prefab_Source
   m_TagString: Untagged
@@ -173,6 +174,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &-7476931712054618781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1204770210383846150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 020b7fc0b2a9e46bf8b16124a2660f5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArmyUnitEntryUI
+  soldierIcon: {fileID: 8090035011874037609}
+  soldierCountText: {fileID: 2276657445991111240}
 --- !u!1 &1510387694770652500
 GameObject:
   m_ObjectHideFlags: 0
@@ -185,7 +200,7 @@ GameObject:
   - component: {fileID: 8617800521213083624}
   - component: {fileID: 2276657445991111240}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: SoliderCountText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

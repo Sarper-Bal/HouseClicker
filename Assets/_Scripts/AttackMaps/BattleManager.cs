@@ -5,21 +5,23 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 
-// Savaş alanındaki bir askerin anlık durumunu tutmak için.
-public class BattleParticipant
-{
-    public SoldierData soldierData;
-    public long currentHealth;
-
-    public BattleParticipant(SoldierData data)
-    {
-        soldierData = data;
-        currentHealth = data.health;
-    }
-}
-
 public class BattleManager : MonoBehaviour
 {
+    // --- HATA DÜZELTMESİ: BattleParticipant sınıfı, orijinal yapıda olduğu gibi BattleManager'ın İÇİNE geri taşındı. ---
+    // Savaş alanındaki bir askerin anlık durumunu tutmak için.
+    public class BattleParticipant
+    {
+        public SoldierData soldierData;
+        public long currentHealth;
+
+        public BattleParticipant(SoldierData data)
+        {
+            soldierData = data;
+            currentHealth = data.health;
+        }
+    }
+    // -----------------------------------------------------------------------------------------------------------------
+
     public static BattleManager Instance { get; private set; }
 
     [System.Serializable]
@@ -34,8 +36,11 @@ public class BattleManager : MonoBehaviour
     [Header("UI Referansları")]
     [SerializeField] private SoldierDisplayUI playerDisplay;
     [SerializeField] private SoldierDisplayUI enemyDisplay;
-    [Tooltip("Sarsılacak olan ana savaş panelinin Transform'u.")]
     [SerializeField] private RectTransform battlePanelTransform;
+
+    [Header("Ordu Durum Panelleri")]
+    [SerializeField] private ArmyListUI playerArmyListUI;
+    [SerializeField] private ArmyListUI enemyArmyListUI;
 
     [Header("Animasyon Referansları")]
     [SerializeField] private BattleAnimator playerAnimator;
@@ -46,6 +51,10 @@ public class BattleManager : MonoBehaviour
 
     private Queue<SoldierData> playerArmyQueue = new Queue<SoldierData>();
     private Queue<SoldierData> enemyArmyQueue = new Queue<SoldierData>();
+
+    private Dictionary<string, int> playerArmyComposition = new Dictionary<string, int>();
+    private Dictionary<string, int> enemyArmyComposition = new Dictionary<string, int>();
+    private Dictionary<string, Sprite> soldierIconDict = new Dictionary<string, Sprite>();
 
     private BattleParticipant currentPlayer;
     private BattleParticipant currentEnemy;
@@ -68,11 +77,11 @@ public class BattleManager : MonoBehaviour
     public void StartBattle(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy, List<SoldierData> allTypes, Castle targetCastle)
     {
         if (uiController == null) return;
-
         allSoldierTypes = allTypes;
         castleBeingFought = targetCastle;
 
         PrepareArmies(playerArmy, enemyArmy);
+
         if (playerArmyQueue.Count == 0 || enemyArmyQueue.Count == 0)
         {
             Debug.LogError("Savaş başlatılamadı! Ordulardan biri boş.");
@@ -81,19 +90,44 @@ public class BattleManager : MonoBehaviour
         }
 
         uiController.ShowBattlePanel();
-        StopAllCoroutines(); // Önceki savaşlardan kalan bir coroutine varsa durdur.
+        UpdateArmyListDisplays();
+        StopAllCoroutines();
         StartCoroutine(BattleLoop());
     }
 
     private void PrepareArmies(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy)
     {
         playerArmyQueue.Clear();
-        foreach (var soldierData in playerArmy) { playerArmyQueue.Enqueue(soldierData); }
-
         enemyArmyQueue.Clear();
+        playerArmyComposition.Clear();
+        enemyArmyComposition.Clear();
+        soldierIconDict.Clear();
+
+        foreach (var soldierData in playerArmy)
+        {
+            playerArmyQueue.Enqueue(soldierData);
+            if (!playerArmyComposition.ContainsKey(soldierData.soldierName))
+            {
+                playerArmyComposition[soldierData.soldierName] = 0;
+                if (!soldierIconDict.ContainsKey(soldierData.soldierName))
+                    soldierIconDict.Add(soldierData.soldierName, soldierData.shopIcon);
+            }
+            playerArmyComposition[soldierData.soldierName]++;
+        }
+
         foreach (var enemyUnit in enemyArmy)
         {
-            for (int i = 0; i < enemyUnit.count; i++) { enemyArmyQueue.Enqueue(enemyUnit.soldierData); }
+            for (int i = 0; i < enemyUnit.count; i++)
+            {
+                enemyArmyQueue.Enqueue(enemyUnit.soldierData);
+            }
+            if (!enemyArmyComposition.ContainsKey(enemyUnit.soldierData.soldierName))
+            {
+                enemyArmyComposition[enemyUnit.soldierData.soldierName] = 0;
+                if (!soldierIconDict.ContainsKey(enemyUnit.soldierData.soldierName))
+                    soldierIconDict.Add(enemyUnit.soldierData.soldierName, enemyUnit.soldierData.shopIcon);
+            }
+            enemyArmyComposition[enemyUnit.soldierData.soldierName] += enemyUnit.count;
         }
     }
 
@@ -111,26 +145,18 @@ public class BattleManager : MonoBehaviour
         {
             yield return new WaitForSeconds(turnDelay);
 
-            // 1. Saldırı Animasyonları (İleri atılma ve geri çekilme)
             Sequence attackSequence = DOTween.Sequence();
             attackSequence.Append(playerAnimator.PlayAttack());
             attackSequence.Join(enemyAnimator.PlayAttack());
-
-            // 2. Tam ortasında, panel sarsıntısını ekle
             if (battlePanelTransform != null)
-            {
                 attackSequence.Insert(0.2f, battlePanelTransform.DOShakeAnchorPos(0.2f, new Vector2(15, 0), 20, 90));
-            }
-
             yield return attackSequence.WaitForCompletion();
 
-            // 3. Hasar Verme Mantığı (LOGIC)
             long playerAttackPower = currentPlayer.soldierData.attack;
             long enemyAttackPower = currentEnemy.soldierData.attack;
             currentPlayer.currentHealth -= enemyAttackPower;
             currentEnemy.currentHealth -= playerAttackPower;
 
-            // 4. Hasar Alma Animasyonları ve Can Barlarının Güncellenmesi
             Sequence damageSequence = DOTween.Sequence();
             damageSequence.Append(playerAnimator.PlayTakeDamage());
             damageSequence.Join(enemyAnimator.PlayTakeDamage());
@@ -138,15 +164,19 @@ public class BattleManager : MonoBehaviour
             UpdateDisplay(enemyDisplay, currentEnemy);
             yield return damageSequence.WaitForCompletion();
 
-            // 5. Ölüm Kontrolü ve Animasyonları
             bool playerDied = currentPlayer.currentHealth <= 0;
             bool enemyDied = currentEnemy.currentHealth <= 0;
+
+            if (playerDied) playerArmyComposition[currentPlayer.soldierData.soldierName]--;
+            if (enemyDied) enemyArmyComposition[currentEnemy.soldierData.soldierName]--;
+
             Sequence deathSequence = DOTween.Sequence();
             if (playerDied) deathSequence.Append(playerAnimator.PlayDeath());
             if (enemyDied) deathSequence.Join(enemyAnimator.PlayDeath());
             yield return deathSequence.WaitForCompletion();
 
-            // 6. Yeni Askerleri Yükle
+            if (playerDied || enemyDied) UpdateArmyListDisplays();
+
             Sequence newSoldierSequence = DOTween.Sequence();
             if (playerDied)
             {
@@ -160,22 +190,23 @@ public class BattleManager : MonoBehaviour
             }
             yield return newSoldierSequence.WaitForCompletion();
         }
-
         EndBattle();
+    }
+
+    private void UpdateArmyListDisplays()
+    {
+        if (playerArmyListUI != null) playerArmyListUI.UpdateList(playerArmyComposition, soldierIconDict);
+        if (enemyArmyListUI != null) enemyArmyListUI.UpdateList(enemyArmyComposition, soldierIconDict);
     }
 
     private void EndBattle()
     {
         bool playerWon = (currentPlayer != null && currentEnemy == null);
-
         if (playerWon)
         {
             if (WorldMapManager.Instance != null && castleBeingFought != null)
-            {
                 WorldMapManager.Instance.ConquerCastle(castleBeingFought);
-            }
         }
-
         UpdateArmyRecordsAfterBattle(playerWon);
         uiController.ShowResultPanel(playerWon);
     }
@@ -213,12 +244,9 @@ public class BattleManager : MonoBehaviour
     private void UpdateDisplay(SoldierDisplayUI display, BattleParticipant participant, bool isNew = false)
     {
         if (display == null || participant == null) return;
-
         if (display.displayParent != null && !display.displayParent.activeSelf) display.displayParent.SetActive(true);
-
         if (display.healthText != null)
             display.healthText.text = participant.currentHealth > 0 ? participant.currentHealth.ToString() : "0";
-
         if (isNew)
         {
             if (display.soldierImage != null)
@@ -231,7 +259,6 @@ public class BattleManager : MonoBehaviour
     private void UpdateArmyRecordsAfterBattle(bool playerWon)
     {
         if (allSoldierTypes == null) return;
-
         if (playerWon)
         {
             var survivingSoldiers = new Dictionary<string, int>();
@@ -253,9 +280,7 @@ public class BattleManager : MonoBehaviour
         {
             foreach (var type in allSoldierTypes) { PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, 0); }
         }
-
         PlayerPrefs.Save();
-
         if (SoldierManager.Instance != null) { SoldierManager.Instance.RefreshDataFromPrefs(); }
     }
 }

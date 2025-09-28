@@ -208,6 +208,7 @@ GameObject:
   - component: {fileID: 98415972}
   - component: {fileID: 98415974}
   - component: {fileID: 98415973}
+  - component: {fileID: 98415975}
   m_Layer: 5
   m_Name: Content
   m_TagString: Untagged
@@ -274,6 +275,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 0
   m_VerticalFit: 2
+--- !u!114 &98415975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 98415971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20a9aa40aa47f4a32a28bead96324177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArmyListUI
+  armyUnitEntryPrefab: {fileID: 1204770210383846150, guid: 7ec328927b3b84df8a0fac6586321338, type: 3}
 --- !u!1 &163729827
 GameObject:
   m_ObjectHideFlags: 0
@@ -285,6 +299,7 @@ GameObject:
   - component: {fileID: 163729828}
   - component: {fileID: 163729830}
   - component: {fileID: 163729829}
+  - component: {fileID: 163729831}
   m_Layer: 5
   m_Name: Content
   m_TagString: Untagged
@@ -351,6 +366,19 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &163729831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 163729827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20a9aa40aa47f4a32a28bead96324177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArmyListUI
+  armyUnitEntryPrefab: {fileID: 1204770210383846150, guid: 7ec328927b3b84df8a0fac6586321338, type: 3}
 --- !u!1 &348320270
 GameObject:
   m_ObjectHideFlags: 0
@@ -990,6 +1018,7 @@ GameObject:
   - component: {fileID: 657389986}
   - component: {fileID: 657389988}
   - component: {fileID: 657389987}
+  - component: {fileID: 657389989}
   m_Layer: 5
   m_Name: EnemyArmy
   m_TagString: Untagged
@@ -1055,6 +1084,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 657389985}
   m_CullTransparentMesh: 1
+--- !u!114 &657389989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 657389985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20a9aa40aa47f4a32a28bead96324177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArmyListUI
+  armyUnitEntryPrefab: {fileID: 1204770210383846150, guid: 7ec328927b3b84df8a0fac6586321338, type: 3}
 --- !u!1 &666439306
 GameObject:
   m_ObjectHideFlags: 0
@@ -2893,6 +2935,8 @@ MonoBehaviour:
     attackText: {fileID: 924163312}
     displayParent: {fileID: 722364408}
   battlePanelTransform: {fileID: 1702191827}
+  playerArmyListUI: {fileID: 163729831}
+  enemyArmyListUI: {fileID: 98415975}
   playerAnimator: {fileID: 708681594}
   enemyAnimator: {fileID: 628503605}
   turnDelay: 1
