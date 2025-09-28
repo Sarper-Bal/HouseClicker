@@ -34,6 +34,8 @@ public class BattleManager : MonoBehaviour
     [Header("UI Referansları")]
     [SerializeField] private SoldierDisplayUI playerDisplay;
     [SerializeField] private SoldierDisplayUI enemyDisplay;
+    [Tooltip("Sarsılacak olan ana savaş panelinin Transform'u.")]
+    [SerializeField] private RectTransform battlePanelTransform;
 
     [Header("Animasyon Referansları")]
     [SerializeField] private BattleAnimator playerAnimator;
@@ -66,8 +68,10 @@ public class BattleManager : MonoBehaviour
     public void StartBattle(List<SoldierData> playerArmy, List<EnemyArmyUnit> enemyArmy, List<SoldierData> allTypes, Castle targetCastle)
     {
         if (uiController == null) return;
+
         allSoldierTypes = allTypes;
         castleBeingFought = targetCastle;
+
         PrepareArmies(playerArmy, enemyArmy);
         if (playerArmyQueue.Count == 0 || enemyArmyQueue.Count == 0)
         {
@@ -75,8 +79,9 @@ public class BattleManager : MonoBehaviour
             uiController.HideAllPanels();
             return;
         }
+
         uiController.ShowBattlePanel();
-        StopAllCoroutines();
+        StopAllCoroutines(); // Önceki savaşlardan kalan bir coroutine varsa durdur.
         StartCoroutine(BattleLoop());
     }
 
@@ -106,37 +111,42 @@ public class BattleManager : MonoBehaviour
         {
             yield return new WaitForSeconds(turnDelay);
 
-            // --- HATANIN DÜZELTİLDİĞİ KISIM ---
-            // PlayAttack metotlarından parametreler kaldırıldı.
+            // 1. Saldırı Animasyonları (İleri atılma ve geri çekilme)
             Sequence attackSequence = DOTween.Sequence();
             attackSequence.Append(playerAnimator.PlayAttack());
             attackSequence.Join(enemyAnimator.PlayAttack());
-            yield return attackSequence.WaitForCompletion();
-            // ---------------------------------
 
+            // 2. Tam ortasında, panel sarsıntısını ekle
+            if (battlePanelTransform != null)
+            {
+                attackSequence.Insert(0.2f, battlePanelTransform.DOShakeAnchorPos(0.2f, new Vector2(15, 0), 20, 90));
+            }
+
+            yield return attackSequence.WaitForCompletion();
+
+            // 3. Hasar Verme Mantığı (LOGIC)
             long playerAttackPower = currentPlayer.soldierData.attack;
             long enemyAttackPower = currentEnemy.soldierData.attack;
-
             currentPlayer.currentHealth -= enemyAttackPower;
             currentEnemy.currentHealth -= playerAttackPower;
 
+            // 4. Hasar Alma Animasyonları ve Can Barlarının Güncellenmesi
             Sequence damageSequence = DOTween.Sequence();
             damageSequence.Append(playerAnimator.PlayTakeDamage());
             damageSequence.Join(enemyAnimator.PlayTakeDamage());
-
             UpdateDisplay(playerDisplay, currentPlayer);
             UpdateDisplay(enemyDisplay, currentEnemy);
-
             yield return damageSequence.WaitForCompletion();
 
+            // 5. Ölüm Kontrolü ve Animasyonları
             bool playerDied = currentPlayer.currentHealth <= 0;
             bool enemyDied = currentEnemy.currentHealth <= 0;
-
             Sequence deathSequence = DOTween.Sequence();
             if (playerDied) deathSequence.Append(playerAnimator.PlayDeath());
             if (enemyDied) deathSequence.Join(enemyAnimator.PlayDeath());
             yield return deathSequence.WaitForCompletion();
 
+            // 6. Yeni Askerleri Yükle
             Sequence newSoldierSequence = DOTween.Sequence();
             if (playerDied)
             {
@@ -175,13 +185,13 @@ public class BattleManager : MonoBehaviour
         if (playerArmyQueue.Count > 0)
         {
             currentPlayer = new BattleParticipant(playerArmyQueue.Dequeue());
-            playerAnimator.ResetAnimator();
+            if (playerAnimator != null) playerAnimator.ResetAnimator();
             UpdateDisplay(playerDisplay, currentPlayer, true);
         }
         else
         {
             currentPlayer = null;
-            playerDisplay.displayParent.SetActive(false);
+            if (playerDisplay.displayParent != null) playerDisplay.displayParent.SetActive(false);
         }
     }
 
@@ -190,39 +200,49 @@ public class BattleManager : MonoBehaviour
         if (enemyArmyQueue.Count > 0)
         {
             currentEnemy = new BattleParticipant(enemyArmyQueue.Dequeue());
-            enemyAnimator.ResetAnimator();
+            if (enemyAnimator != null) enemyAnimator.ResetAnimator();
             UpdateDisplay(enemyDisplay, currentEnemy, true);
         }
         else
         {
             currentEnemy = null;
-            enemyDisplay.displayParent.SetActive(false);
+            if (enemyDisplay.displayParent != null) enemyDisplay.displayParent.SetActive(false);
         }
     }
 
     private void UpdateDisplay(SoldierDisplayUI display, BattleParticipant participant, bool isNew = false)
     {
-        if (!display.displayParent.activeSelf) display.displayParent.SetActive(true);
-        display.healthText.text = participant.currentHealth > 0 ? participant.currentHealth.ToString() : "0";
+        if (display == null || participant == null) return;
+
+        if (display.displayParent != null && !display.displayParent.activeSelf) display.displayParent.SetActive(true);
+
+        if (display.healthText != null)
+            display.healthText.text = participant.currentHealth > 0 ? participant.currentHealth.ToString() : "0";
+
         if (isNew)
         {
-            display.soldierImage.sprite = participant.soldierData.shopIcon;
-            display.attackText.text = participant.soldierData.attack.ToString();
+            if (display.soldierImage != null)
+                display.soldierImage.sprite = participant.soldierData.shopIcon;
+            if (display.attackText != null)
+                display.attackText.text = participant.soldierData.attack.ToString();
         }
     }
 
     private void UpdateArmyRecordsAfterBattle(bool playerWon)
     {
         if (allSoldierTypes == null) return;
+
         if (playerWon)
         {
             var survivingSoldiers = new Dictionary<string, int>();
             if (currentPlayer != null) { playerArmyQueue.Enqueue(currentPlayer.soldierData); }
+
             foreach (var soldier in playerArmyQueue)
             {
                 if (!survivingSoldiers.ContainsKey(soldier.soldierName)) { survivingSoldiers[soldier.soldierName] = 0; }
                 survivingSoldiers[soldier.soldierName]++;
             }
+
             foreach (var type in allSoldierTypes)
             {
                 int newCount = survivingSoldiers.ContainsKey(type.soldierName) ? survivingSoldiers[type.soldierName] : 0;
@@ -233,7 +253,9 @@ public class BattleManager : MonoBehaviour
         {
             foreach (var type in allSoldierTypes) { PlayerPrefs.SetInt("SoldierCount_" + type.soldierName, 0); }
         }
+
         PlayerPrefs.Save();
+
         if (SoldierManager.Instance != null) { SoldierManager.Instance.RefreshDataFromPrefs(); }
     }
 }

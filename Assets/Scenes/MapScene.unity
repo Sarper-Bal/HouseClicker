@@ -2578,6 +2578,7 @@ MonoBehaviour:
     healthText: {fileID: 967243311}
     attackText: {fileID: 924163312}
     displayParent: {fileID: 722364408}
+  battlePanelTransform: {fileID: 1702191827}
   playerAnimator: {fileID: 708681594}
   enemyAnimator: {fileID: 628503605}
   turnDelay: 3
