@@ -14,6 +14,6 @@ public class ArmyUnitEntryUI : MonoBehaviour
     {
         this.SoldierName = soldierName;
         soldierIcon.sprite = icon;
-        soldierCountText.text = "x" + count;
+        soldierCountText.text = "" + count;
     }
 }
