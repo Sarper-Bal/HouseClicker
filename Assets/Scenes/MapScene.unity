@@ -743,7 +743,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BattleAnimator
   characterImage: {fileID: 628503603}
   attackPunchDirection: {x: -50, y: 0}
-  deathEjectDirection: {x: 100, y: 50}
+  deathEjectDistance: 400
+  deathJumpPower: 150
+  deathAnimationDuration: 0.7
+  deathRotateCount: 2
 --- !u!1 &666439306
 GameObject:
   m_ObjectHideFlags: 0
@@ -1052,7 +1055,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BattleAnimator
   characterImage: {fileID: 708681592}
   attackPunchDirection: {x: 50, y: 0}
-  deathEjectDirection: {x: -100, y: 50}
+  deathEjectDistance: 400
+  deathJumpPower: 150
+  deathAnimationDuration: 1
+  deathRotateCount: 1
 --- !u!1 &722364408
 GameObject:
   m_ObjectHideFlags: 0
@@ -2581,7 +2587,7 @@ MonoBehaviour:
   battlePanelTransform: {fileID: 1702191827}
   playerAnimator: {fileID: 708681594}
   enemyAnimator: {fileID: 628503605}
-  turnDelay: 3
+  turnDelay: 1
 --- !u!4 &1166439858
 Transform:
   m_ObjectHideFlags: 0
