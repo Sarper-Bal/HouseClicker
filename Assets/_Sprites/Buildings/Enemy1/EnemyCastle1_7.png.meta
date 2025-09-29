@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: cdf346389d32d473bab364cf6bf1565d
+guid: d7162426442db454a93d17d3534b7f5c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -72768418136667728
-    second: House3_3_0
+      213: -7115619110665144148
+    second: EnemyCastle1_7_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: House3_3_0
+      name: EnemyCastle1_7_0
       rect:
         serializedVersion: 2
-        x: 225
-        y: 193
-        width: 622
-        height: 817
+        x: 160
+        y: 105
+        width: 777
+        height: 875
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0b9c81e52897dfef0800000000000000
-      internalID: -72768418136667728
+      spriteID: ca8b2d77e1e304d90800000000000000
+      internalID: -7115619110665144148
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      House3_3_0: -72768418136667728
+      EnemyCastle1_7_0: -7115619110665144148
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
