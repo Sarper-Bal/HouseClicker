@@ -25,6 +25,12 @@ public class BattleAnimator : MonoBehaviour
     private Vector3 initialPosition;
     private Color initialColor;
 
+    // --- YENİ EKLENEN KISIM ---
+    [Header("Ses Ayarları")]
+    [Tooltip("Bu karakterin saldırı animasyonu sırasında çalacak ses.")]
+    [SerializeField] private AudioClip attackSound;
+    // -------------------------
+
     private void Awake()
     {
         if (characterImage == null)
@@ -58,6 +64,13 @@ public class BattleAnimator : MonoBehaviour
 
     public Tween PlayAttack()
     {
+        // --- YENİ EKLENEN SATIR ---
+        // Animasyon başlamadan hemen önce saldırı sesini çal.
+        if (SoundManager.Instance != null && attackSound != null)
+        {
+            SoundManager.Instance.PlaySound(attackSound);
+        }
+        // -------------------------
         return GetComponent<RectTransform>().DOPunchAnchorPos(attackPunchDirection, 0.4f, 5, 0.5f);
     }
 
@@ -96,4 +109,6 @@ public class BattleAnimator : MonoBehaviour
         characterImage.color = initialColor;
         characterImage.gameObject.SetActive(true); // Ölüm sonrası tekrar görünür yap
     }
+
+
 }

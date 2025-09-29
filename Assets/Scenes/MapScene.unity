@@ -1007,6 +1007,7 @@ MonoBehaviour:
   deathJumpPower: 150
   deathAnimationDuration: 0.7
   deathRotateCount: 2
+  attackSound: {fileID: 8300000, guid: ffb159a21c8a04135a5616979c828fab, type: 3}
 --- !u!1 &666439306
 GameObject:
   m_ObjectHideFlags: 0
@@ -1316,6 +1317,7 @@ MonoBehaviour:
   deathJumpPower: 150
   deathAnimationDuration: 1
   deathRotateCount: 1
+  attackSound: {fileID: 0}
 --- !u!1 &722364408
 GameObject:
   m_ObjectHideFlags: 0
@@ -2252,6 +2254,7 @@ GameObject:
   - component: {fileID: 925353468}
   - component: {fileID: 925353467}
   - component: {fileID: 925353466}
+  - component: {fileID: 925353470}
   m_Layer: 5
   m_Name: BackButton
   m_TagString: Untagged
@@ -2361,6 +2364,18 @@ RectTransform:
   m_AnchoredPosition: {x: 150, y: 0}
   m_SizeDelta: {x: 300, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &925353470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 925353465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e95201c2a7757461080c6b4d2d6d2b33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
 --- !u!1 &944912321
 GameObject:
   m_ObjectHideFlags: 0

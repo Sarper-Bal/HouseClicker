@@ -10218,6 +10218,7 @@ GameObject:
   - component: {fileID: 1714690163}
   - component: {fileID: 1714690162}
   - component: {fileID: 1714690161}
+  - component: {fileID: 1714690164}
   m_Layer: 5
   m_Name: GoToMapButton
   m_TagString: Untagged
@@ -10328,6 +10329,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1714690159}
   m_CullTransparentMesh: 1
+--- !u!114 &1714690164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1714690159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e95201c2a7757461080c6b4d2d6d2b33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
 --- !u!1 &1719998642
 GameObject:
   m_ObjectHideFlags: 0
@@ -11420,6 +11433,7 @@ GameObject:
   - component: {fileID: 1915979763}
   - component: {fileID: 1915979762}
   - component: {fileID: 1915979761}
+  - component: {fileID: 1915979764}
   m_Layer: 5
   m_Name: ShopButton
   m_TagString: Untagged
@@ -11542,6 +11556,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1915979759}
   m_CullTransparentMesh: 1
+--- !u!114 &1915979764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1915979759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e95201c2a7757461080c6b4d2d6d2b33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
 --- !u!1 &1964434771
 GameObject:
   m_ObjectHideFlags: 0
