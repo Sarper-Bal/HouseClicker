@@ -116,10 +116,10 @@ TextureImporter:
       name: "S3SAG\u0306_SINGLE_0"
       rect:
         serializedVersion: 2
-        x: 126
-        y: 206
-        width: 731
-        height: 672
+        x: 0
+        y: 0
+        width: 728
+        height: 670
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

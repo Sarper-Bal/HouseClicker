@@ -1,10 +1,16 @@
 fileFormatVersion: 2
-guid: 26a66b669847049389466f097004188e
+guid: c5e00d496fc7145c2b015a50d1b9675b
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1082478635748415596
-    second: "S1SAG\u0306_SINGLE_0"
+      213: -4709757858194694412
+    second: "E1SAG\u03064_SINGLE_0"
+  - first:
+      213: -1852980370930862138
+    second: "E1SAG\u03064_SINGLE_1"
+  - first:
+      213: -5395725717105538437
+    second: "E1SAG\u03064_SINGLE_2"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +119,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "S1SAG\u0306_SINGLE_0"
+      name: "E1SAG\u03064_SINGLE_0"
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 561
-        height: 599
+        x: 4
+        y: 32
+        width: 557
+        height: 555
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +134,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c68dbb0859cb50f00800000000000000
-      internalID: 1082478635748415596
+      spriteID: 4fe533c6e2493aeb0800000000000000
+      internalID: -4709757858194694412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "E1SAG\u03064_SINGLE_1"
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 2
+        width: 90
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c7f4ee8b24e846e0800000000000000
+      internalID: -1852980370930862138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "E1SAG\u03064_SINGLE_2"
+      rect:
+        serializedVersion: 2
+        x: 381
+        y: 0
+        width: 141
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7a0c7e4c088e15b0800000000000000
+      internalID: -5395725717105538437
       vertices: []
       indices: 
       edges: []
@@ -148,7 +198,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "S1SAG\u0306_SINGLE_0": 1082478635748415596
+      "E1SAG\u03064_SINGLE_0": -4709757858194694412
+      "E1SAG\u03064_SINGLE_1": -1852980370930862138
+      "E1SAG\u03064_SINGLE_2": -5395725717105538437
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 26a66b669847049389466f097004188e
+guid: 5706da69c5715450c8dc02cd1bc1deb3
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1082478635748415596
-    second: "S1SAG\u0306_SINGLE_0"
+      213: -3107117685169057164
+    second: "E1SAG\u03069_SINGLE_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "S1SAG\u0306_SINGLE_0"
+      name: "E1SAG\u03069_SINGLE_0"
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 561
-        height: 599
+        width: 508
+        height: 489
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c68dbb0859cb50f00800000000000000
-      internalID: 1082478635748415596
+      spriteID: 4721a247dec41e4d0800000000000000
+      internalID: -3107117685169057164
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "S1SAG\u0306_SINGLE_0": 1082478635748415596
+      "E1SAG\u03069_SINGLE_0": -3107117685169057164
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
