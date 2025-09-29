@@ -63,6 +63,7 @@ public class WorldMapManager : MonoBehaviour
         BattleManager.Instance.StartBattle(playerArmy, enemyArmy, allSoldierTypes, selectedCastle);
     }
 
+
     /// <summary>
     /// Belirtilen kalenin fethedilmesini sağlar. BattleManager tarafından çağrılır.
     /// </summary>
@@ -70,6 +71,23 @@ public class WorldMapManager : MonoBehaviour
     {
         if (castleToConquer != null)
         {
+            // --- YENİ EKLENEN ÖDÜL MANTIĞI ---
+            if (castleToConquer.castleData != null && castleToConquer.castleData.conquestGoldReward > 0)
+            {
+                long rewardAmount = castleToConquer.castleData.conquestGoldReward;
+
+                // CurrencyManager aracılığıyla oyuncuya altını ver.
+                if (CurrencyManager.Instance != null)
+                {
+                    CurrencyManager.Instance.AddGold(rewardAmount);
+                    Debug.Log(castleToConquer.castleData.castleName + " fethedildi ve " + rewardAmount + " altın kazanıldı!");
+
+                    // İPUCU: Burada MapUIController'a bir bildirim göndererek
+                    // ekranda "+1000 Altın!" gibi bir yazı da gösterebilirsin.
+                }
+            }
+            // ---------------------------------
+
             castleToConquer.Conquer();
         }
     }

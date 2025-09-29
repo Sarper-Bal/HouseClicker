@@ -29,4 +29,8 @@ public class EnemyCastleData : ScriptableObject
     [Header("Ordu Kompozisyonu")]
     public List<EnemyArmyUnit> armyComposition;
     // -------------------------
+    // --- YENİ EKLENEN SATIR ---
+    [Tooltip("Bu kale fethedildiğinde oyuncuya verilecek altın ödülü.")]
+    public long conquestGoldReward;
+    // -------------------------
 }
