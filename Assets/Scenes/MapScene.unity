@@ -1007,7 +1007,7 @@ MonoBehaviour:
   deathJumpPower: 150
   deathAnimationDuration: 0.7
   deathRotateCount: 2
-  attackSound: {fileID: 8300000, guid: ffb159a21c8a04135a5616979c828fab, type: 3}
+  attackSound: {fileID: 0}
 --- !u!1 &666439306
 GameObject:
   m_ObjectHideFlags: 0
@@ -1317,7 +1317,7 @@ MonoBehaviour:
   deathJumpPower: 150
   deathAnimationDuration: 1
   deathRotateCount: 1
-  attackSound: {fileID: 0}
+  attackSound: {fileID: 8300000, guid: 7e26c9daf4c32483b9c2790e662d3f1b, type: 3}
 --- !u!1 &722364408
 GameObject:
   m_ObjectHideFlags: 0
@@ -2376,6 +2376,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e95201c2a7757461080c6b4d2d6d2b33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
+  overrideSound: {fileID: 0}
 --- !u!1 &944912321
 GameObject:
   m_ObjectHideFlags: 0

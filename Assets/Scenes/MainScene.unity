@@ -9752,6 +9752,7 @@ GameObject:
   - component: {fileID: 1637393366}
   - component: {fileID: 1637393365}
   - component: {fileID: 1637393364}
+  - component: {fileID: 1637393367}
   m_Layer: 5
   m_Name: UpgradeButton
   m_TagString: Untagged
@@ -9861,6 +9862,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1637393362}
   m_CullTransparentMesh: 1
+--- !u!114 &1637393367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1637393362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e95201c2a7757461080c6b4d2d6d2b33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
+  overrideSound: {fileID: 8300000, guid: 79e6baad2fd414b82a6d49ce1568d2e5, type: 3}
 --- !u!1 &1658844174
 GameObject:
   m_ObjectHideFlags: 0
@@ -10341,6 +10355,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e95201c2a7757461080c6b4d2d6d2b33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
+  overrideSound: {fileID: 0}
 --- !u!1 &1719998642
 GameObject:
   m_ObjectHideFlags: 0
@@ -11568,6 +11583,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e95201c2a7757461080c6b4d2d6d2b33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
+  overrideSound: {fileID: 0}
 --- !u!1 &1964434771
 GameObject:
   m_ObjectHideFlags: 0
