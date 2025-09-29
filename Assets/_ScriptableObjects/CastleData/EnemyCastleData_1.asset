@@ -15,8 +15,8 @@ MonoBehaviour:
   castleName: Frozen Castle
   castleSprite: {fileID: 21300000, guid: 47146093e389d491db37cefdcfc6971c, type: 3}
   armyComposition:
-  - soldierData: {fileID: 11400000, guid: ef77b86151aa14f56acd7ecd99495a79, type: 2}
+  - soldierData: {fileID: 11400000, guid: a738bd1c884c74a7ea25328ba8bc397e, type: 2}
+    count: 2
+  - soldierData: {fileID: 11400000, guid: 1afd27be147554b4ab79fe25ff766a57, type: 2}
     count: 1
-  - soldierData: {fileID: 11400000, guid: 090a929b002e446969ac24a6fe782605, type: 2}
-    count: 1
-  conquestGoldReward: 100
+  conquestGoldReward: 50
