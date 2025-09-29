@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using DG.Tweening;
 
 public class MapUIController : MonoBehaviour
 {
@@ -31,6 +32,8 @@ public class MapUIController : MonoBehaviour
     [Header("Genel Butonlar")]
     [SerializeField] private Button backToMainSceneButton;
 
+    private Tween attackButtonTween;
+
     private void Start()
     {
         closePlayerPanelButton.onClick.AddListener(HideAllPanels);
@@ -46,7 +49,19 @@ public class MapUIController : MonoBehaviour
         HideAllPanels();
     }
 
-    // --- YENİ EKLENEN FONKSİYON ---
+    // --- YENİ EKLENEN METOT: ANİMASYONU GÜVENLE DURDURMA ---
+    private void OnDestroy()
+    {
+        // Bu script yok olmadan önce, çalışan bir animasyon varsa onu sonlandır.
+        // Bu, sahne geçişlerindeki "Missing Target" hatasını çözecektir.
+        if (attackButtonTween != null)
+        {
+            attackButtonTween.Kill();
+        }
+    }
+    // --------------------------------------------------------
+
+
     private void OnAttackButtonClicked()
     {
         HideAllPanels();
@@ -71,6 +86,18 @@ public class MapUIController : MonoBehaviour
             enemyCastleNameText.text = castleData.castleName;
             PopulateEnemySoldierList(castleData);
         }
+
+        // --- 3. ANİMASYON MANTIĞI EKLENDİ ---
+        // Eğer saldırı butonu aktifse ve animasyonu yoksa, animasyonu başlat.
+        if (isAttackable)
+        {
+            if (attackButtonTween == null || !attackButtonTween.IsActive())
+            {
+                attackButtonTween = attackButton.transform.DOScale(1.1f, 0.5f)
+                    .SetEase(Ease.InOutQuad).SetLoops(-1, LoopType.Yoyo);
+            }
+        }
+        // ---------------------------------
     }
 
     // --- YENİ EKLENEN PANEL KONTROL FONKSİYONLARI ---
@@ -123,5 +150,12 @@ public class MapUIController : MonoBehaviour
         enemyCastlePanel.SetActive(false);
         battlePanel.SetActive(false); // --- YENİ EKLENDİ ---
         battleResultPanel.SetActive(false); // --- YENİ EKLENDİ ---
+
+        // Paneller gizlendiğinde "Saldır" butonu animasyonunu durdur.
+        if (attackButtonTween != null)
+        {
+            attackButtonTween.Kill();
+            attackButton.transform.localScale = Vector3.one; // Butonun boyutunu normale döndür
+        }
     }
 }

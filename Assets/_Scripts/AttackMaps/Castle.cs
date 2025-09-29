@@ -51,6 +51,20 @@ public class Castle : MonoBehaviour
         button.onClick.AddListener(OnCastleClicked);
     }
 
+
+    // --- YENİ EKLENEN METOT: ANİMASYONU GÜVENLE DURDURMA ---
+    private void OnDestroy()
+    {
+        // Bu kale objesi yok edilirken, ona bağlı olan ve çalışan bir
+        // animasyon varsa, onu anında ve güvenli bir şekilde durdur.
+        // Bu, sahne geçişlerindeki "Missing Target" hatasını çözecektir.
+        if (currentAnimation != null)
+        {
+            currentAnimation.Kill();
+        }
+    }
+    // --------------------------------------------------------
+
     public void OnCastleClicked()
     {
         if (CurrentState == CastleState.PlayerOwned || CurrentState == CastleState.Attackable)

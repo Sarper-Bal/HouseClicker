@@ -6,6 +6,17 @@ using DG.Tweening;
 public class ArmyListUI : MonoBehaviour
 {
     [SerializeField] private GameObject armyUnitEntryPrefab;
+
+    // --- YENİ EKLENEN METOT ---
+    private void OnDestroy()
+    {
+        // Bu obje (ve içindeki tüm asker satırları) yok edilirken,
+        // onlara bağlı tüm DOTween animasyonlarını anında durdur.
+        // Bu, sahne geçişlerindeki "Missing Target" hatasını tamamen çözer.
+        transform.DOKill();
+    }
+    // -------------------------
+
     private Dictionary<string, ArmyUnitEntryUI> listItems = new Dictionary<string, ArmyUnitEntryUI>();
 
     public void UpdateList(Dictionary<string, int> armyComposition, Dictionary<string, Sprite> iconDict)

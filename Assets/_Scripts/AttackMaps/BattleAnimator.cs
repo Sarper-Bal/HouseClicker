@@ -35,6 +35,16 @@ public class BattleAnimator : MonoBehaviour
         initialColor = characterImage.color;
     }
 
+    // --- YENİ EKLENEN METOT: EN ÖNEMLİ DÜZELTME ---
+    private void OnDestroy()
+    {
+        // Bu obje (asker görseli) yok edilirken, ona bağlı tüm DOTween animasyonlarını anında durdur.
+        // Bu, sahne geçişlerindeki "Missing Target" hatasını çözecektir.
+        transform.DOKill();
+    }
+    // ---------------------------------------------
+
+
     public Tween PlaySpawn()
     {
         transform.localScale = Vector3.zero;
