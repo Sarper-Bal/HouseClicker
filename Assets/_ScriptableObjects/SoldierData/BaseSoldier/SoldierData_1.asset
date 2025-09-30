@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b326f5ccfe07140f5b2ec8797a308d3a, type: 3}
   m_Name: SoldierData_1
   m_EditorClassIdentifier: Assembly-CSharp::SoldierData
-  soldierName: Piyade
+  soldierName: Aegis Knight
   shopIcon: {fileID: 21300000, guid: 26a66b669847049389466f097004188e, type: 3}
   cost: 10
   health: 6

@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b326f5ccfe07140f5b2ec8797a308d3a, type: 3}
-  m_Name: EnemySolideData1_3
+  m_Name: SoldierData_3
   m_EditorClassIdentifier: Assembly-CSharp::SoldierData
-  soldierName: Winterwight
-  shopIcon: {fileID: 21300000, guid: c5e00d496fc7145c2b015a50d1b9675b, type: 3}
-  cost: 10
-  health: 6
+  soldierName: Sky Striker
+  shopIcon: {fileID: 21300000, guid: 125dc7d5ef5634e3d90a2abb2699fe54, type: 3}
+  cost: 5
+  health: 3
   attack: 1

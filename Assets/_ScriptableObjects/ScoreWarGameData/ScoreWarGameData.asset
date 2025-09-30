@@ -15,7 +15,7 @@ MonoBehaviour:
   gameName: "Puan Sava\u015F\u0131"
   rewardAmount: 500
   refundOnDraw: 1
-  baseBetAmount: 100
+  baseBetAmount: 50
   amountPerLevel: 10
   startScore: 100
   additiveModifiers: 0a000000140000001e000000fbfffffff1ffffffe7ffffff

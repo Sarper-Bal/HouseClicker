@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Level_1
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
   levelIndex: 1
-  upgradeCost: 5
+  upgradeCost: 10
   goldPerClick: 2
-  goldPerSecond: 2
+  goldPerSecond: 0
   houseSprite: {fileID: 21300000, guid: 7997729ebe37a4091896614a06ec619b, type: 3}
   cosmeticObjectsToShow:
   - Well3_1

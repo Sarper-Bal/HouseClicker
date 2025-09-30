@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EnemySolideData1_6
   m_EditorClassIdentifier: Assembly-CSharp::SoldierData
   soldierName: Piyade
-  shopIcon: {fileID: 21300000, guid: 49f9ebfd21fe04487944fde1940ff2e5, type: 3}
+  shopIcon: {fileID: 21300000, guid: 5260bdd69b49947d8911e8a4754e96ed, type: 3}
   cost: 10
   health: 6
   attack: 1

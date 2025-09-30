@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b326f5ccfe07140f5b2ec8797a308d3a, type: 3}
   m_Name: EnemySolideData1_5
   m_EditorClassIdentifier: Assembly-CSharp::SoldierData
-  soldierName: Piyade
-  shopIcon: {fileID: 21300000, guid: 49f9ebfd21fe04487944fde1940ff2e5, type: 3}
+  soldierName: Rimefiend
+  shopIcon: {fileID: 21300000, guid: af409bdea51af4909988286506af5f3a, type: 3}
   cost: 10
   health: 6
   attack: 1

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b326f5ccfe07140f5b2ec8797a308d3a, type: 3}
   m_Name: EnemySolideData1_10
   m_EditorClassIdentifier: Assembly-CSharp::SoldierData
-  soldierName: Piyade
-  shopIcon: {fileID: 21300000, guid: 49f9ebfd21fe04487944fde1940ff2e5, type: 3}
+  soldierName: Coldscale
+  shopIcon: {fileID: 21300000, guid: b4e7d455f363044c79f675bddfd2dd16, type: 3}
   cost: 10
   health: 6
   attack: 1

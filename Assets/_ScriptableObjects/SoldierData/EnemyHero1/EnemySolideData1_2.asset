@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b326f5ccfe07140f5b2ec8797a308d3a, type: 3}
   m_Name: EnemySolideData1_2
   m_EditorClassIdentifier: Assembly-CSharp::SoldierData
-  soldierName: Piyade
+  soldierName: Icebound
   shopIcon: {fileID: 21300000, guid: af0e365dd1c6e4d43898770b33fcbe9a, type: 3}
   cost: 10
   health: 6
