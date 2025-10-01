@@ -36,6 +36,7 @@ public class UIManager : MonoBehaviour
     private Tween buttonPulseAnimation;
     private Vector3 upgradeButtonOriginalScale;
 
+
     private void Start()
     {
         if (upgradeButton != null)
