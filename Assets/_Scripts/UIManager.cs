@@ -123,7 +123,7 @@ public class UIManager : MonoBehaviour
         if (UpgradeManager.Instance != null && UpgradeManager.Instance.GetCurrentLevelData() != null)
         {
             LevelData currentLevelData = UpgradeManager.Instance.GetCurrentLevelData();
-            levelText.text = "Seviye: " + (currentLevelData.levelIndex + 1);
+            levelText.text = "" + (currentLevelData.levelIndex + 1);
 
             if (houseController != null)
             {
@@ -159,7 +159,7 @@ public class UIManager : MonoBehaviour
     private void UpdateLevelUI(LevelData newLevelData)
     {
         if (newLevelData == null) return;
-        levelText.text = "Seviye: " + (newLevelData.levelIndex + 1);
+        levelText.text = "" + (newLevelData.levelIndex + 1);
         UpdateUpgradeButton();
 
         // --- HATA DÜZELTMESİ: ÇÖKMEYİ ENGELLEMEK İÇİN NULL KONTROLÜ EKLENDİ ---
