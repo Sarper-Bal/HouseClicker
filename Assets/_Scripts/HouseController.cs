@@ -28,6 +28,14 @@ public class HouseController : MonoBehaviour, IPointerDownHandler
         {
             clickSequence.Kill();
         }
+        transform.DOKill();
+
+        if (houseSpriteRenderer != null)
+        {
+            houseSpriteRenderer.DOKill();
+        }
+
+        DOTween.KillAll();
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -66,7 +74,7 @@ public class HouseController : MonoBehaviour, IPointerDownHandler
         clickSequence.Append(transform.DOScale(originalScale * 0.8f, 0.07f));
         clickSequence.Join(houseSpriteRenderer.DOColor(Color.white, 0.07f));
 
-        clickSequence.AppendCallback(CreateShockwave);
+
         clickSequence.Join(transform.DOPunchPosition(Vector3.up * 0.2f, 0.4f, 1, 0.5f));
 
         clickSequence.Append(transform.DOScale(originalScale, 0.5f).SetEase(Ease.OutElastic));
@@ -75,22 +83,7 @@ public class HouseController : MonoBehaviour, IPointerDownHandler
         clickSequence.Join(houseSpriteRenderer.DOColor(originalColor, 0.4f));
     }
 
-    private void CreateShockwave()
-    {
-        if (shockwavePrefab == null) return;
 
-        GameObject shockwaveInstance = Instantiate(shockwavePrefab, transform.position, Quaternion.identity);
-        Destroy(shockwaveInstance, 0.5f);
-
-        SpriteRenderer swRenderer = shockwaveInstance.GetComponent<SpriteRenderer>();
-        if (swRenderer == null) return;
-
-        shockwaveInstance.transform.localScale = originalScale * 0.1f;
-
-        Sequence shockwaveSequence = DOTween.Sequence();
-        shockwaveSequence.Append(shockwaveInstance.transform.DOScale(originalScale * 2f, 0.5f));
-        shockwaveSequence.Join(swRenderer.DOFade(0, 0.5f).SetEase(Ease.InQuad));
-    }
 
     // --- YENİ EKLENEN METOT ---
     /// <summary>

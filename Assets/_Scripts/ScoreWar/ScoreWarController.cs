@@ -87,6 +87,15 @@ public class ScoreWarController : MonoBehaviour
         mainPanel.SetActive(false);
     }
 
+    private void OnDestroy()
+    {
+        // Bu script yok edilirken (örneğin sahne değiştiğinde),
+        // bu objeye ve alt objelerine bağlı TÜM DOTween animasyonlarını anında durdur.
+        // Bu, kutu, yazı ve karakter animasyonlarının neden olabileceği 
+        // "Missing Target" hatalarını kökünden çözer.
+        transform.DOKill();
+    }
+
     private long GetCurrentBetAmount()
     {
         if (UpgradeManager.Instance == null) return gameData.baseBetAmount;
