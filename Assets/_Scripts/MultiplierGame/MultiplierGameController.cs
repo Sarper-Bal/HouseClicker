@@ -49,6 +49,7 @@ public class MultiplierGameController : MonoBehaviour
     private void Start()
     {
         startGameButton.onClick.AddListener(StartGame);
+        closeButton.onClick.AddListener(CloseConfirmationPanel);
         closeButton.onClick.AddListener(CloseMainPanel);
         finishAndCloseButton.onClick.AddListener(CloseMainPanel);
 
@@ -59,6 +60,7 @@ public class MultiplierGameController : MonoBehaviour
 
         mainPanel.SetActive(false);
     }
+
 
     // YENİ FONKSİYON: O anki seviyeye göre bahis miktarını hesaplar.
     private long GetCurrentBetAmount()
@@ -254,4 +256,10 @@ public class MultiplierGameController : MonoBehaviour
             currentAmountText.transform.DOShakePosition(0.4f, new Vector3(10, 0, 0));
         }
     }
+    private void CloseConfirmationPanel()
+    {
+        confirmationPanel.SetActive(false);
+    }
+
+
 }
