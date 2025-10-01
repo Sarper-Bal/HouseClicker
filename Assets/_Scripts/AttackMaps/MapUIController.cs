@@ -111,7 +111,7 @@ public class MapUIController : MonoBehaviour
     {
         HideAllPanels();
         battleResultPanel.SetActive(true);
-        resultText.text = playerWon ? "KAZANDIN!" : "KAYBETTİN!";
+        resultText.text = playerWon ? "CONQUERED!" : "LOSE!";
     }
     // -----------------------------------------------
 

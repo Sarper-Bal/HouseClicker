@@ -183,19 +183,19 @@ public class ScoreWarController : MonoBehaviour
     {
         yield return new WaitForSeconds(1f);
 
-        turnIndicatorText.text = "Senin Sıran";
+        turnIndicatorText.text = "Your Turn";
         yield return RevealBox(playerBoxes[0], playerScoreText, playerSpriteTransform, initialPlayerScale, (newScore) => playerScore = newScore);
         yield return new WaitForSeconds(1.5f);
 
-        turnIndicatorText.text = "Rakip Sırası";
+        turnIndicatorText.text = "Enemy Turn";
         yield return RevealBox(enemyBoxes[0], enemyScoreText, enemySpriteTransform, initialEnemyScale, (newScore) => enemyScore = newScore);
         yield return new WaitForSeconds(1.5f);
 
-        turnIndicatorText.text = "Senin Sıran";
+        turnIndicatorText.text = "Your Turn";
         yield return RevealBox(playerBoxes[1], playerScoreText, playerSpriteTransform, initialPlayerScale, (newScore) => playerScore = newScore);
         yield return new WaitForSeconds(1.5f);
 
-        turnIndicatorText.text = "Rakip Sırası";
+        turnIndicatorText.text = "Enemy Turn";
         yield return RevealBox(enemyBoxes[1], enemyScoreText, enemySpriteTransform, initialEnemyScale, (newScore) => enemyScore = newScore);
         yield return new WaitForSeconds(2f);
 
@@ -238,19 +238,20 @@ public class ScoreWarController : MonoBehaviour
 
         if (playerScore > enemyScore)
         {
-            title = "Kazandın!";
-            info = $"Ödül: {gameData.rewardAmount}";
-            CurrencyManager.Instance.AddGold(gameData.rewardAmount);
+            title = "WIN!";
+            long reward = currentBetAmount * 2;
+            info = $"{reward}";
+            CurrencyManager.Instance.AddGold(reward);
         }
         else if (enemyScore > playerScore)
         {
-            title = "Kaybettin!";
-            info = "Bir Sonraki Sefere";
+            title = "LOSE!";
+            info = "0";
         }
         else
         {
-            title = "Berabere!";
-            info = "Bahis İade Edildi";
+            title = "HANG!";
+            info = "";
             if (gameData.refundOnDraw) CurrencyManager.Instance.AddGold(currentBetAmount);
         }
 

@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: ScoreWarGameData
   m_EditorClassIdentifier: Assembly-CSharp::ScoreWarData
   gameName: "Puan Sava\u015F\u0131"
-  rewardAmount: 500
   refundOnDraw: 1
   baseBetAmount: 50
   amountPerLevel: 10

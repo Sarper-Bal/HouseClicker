@@ -17,7 +17,7 @@ MonoBehaviour:
   amountPerLevel: 10
   positiveMultipliers:
   - 1.5
-  - 2
+  - 1.25
   - 2.5
   negativeMultipliers:
   - -2

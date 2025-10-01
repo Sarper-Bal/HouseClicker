@@ -7,8 +7,8 @@ public class ScoreWarData : ScriptableObject
     [Header("Genel Bilgiler")]
     public string gameName = "Puan Savaşı";
 
-    [Tooltip("Oyunu kazandığında verilecek sabit ödül miktarı.")]
-    public long rewardAmount = 500;
+    //[Tooltip("Oyunu kazandığında verilecek sabit ödül miktarı.")]
+    //public long rewardAmount = 500;
 
     [Tooltip("Beraberlik durumunda giriş ücreti iade edilsin mi?")]
     public bool refundOnDraw = true;
