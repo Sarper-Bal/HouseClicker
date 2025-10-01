@@ -15,5 +15,5 @@ MonoBehaviour:
   soldierName: Icebound
   shopIcon: {fileID: 21300000, guid: af0e365dd1c6e4d43898770b33fcbe9a, type: 3}
   cost: 10
-  health: 6
-  attack: 1
+  health: 2
+  attack: 3

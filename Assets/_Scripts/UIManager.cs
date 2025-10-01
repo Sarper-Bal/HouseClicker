@@ -172,17 +172,20 @@ public class UIManager : MonoBehaviour
     {
         if (UpgradeManager.Instance == null || CurrencyManager.Instance == null || upgradeButton == null) return;
 
+        // --- HATA DÜZELTMESİ: 'currentGold' değişkeni, kullanılmadan ÖNCE tanımlandı. ---
+        long currentGold = CurrencyManager.Instance.CurrentGold;
         int nextLevelIndex = UpgradeManager.Instance.CurrentLevel + 1;
+        // --------------------------------------------------------------------------------
         if (nextLevelIndex >= UpgradeManager.Instance.levelConfigs.Count)
         {
             upgradeButton.interactable = false;
-            upgradeButtonText.text = "Maksimum Seviye";
+            upgradeButtonText.text = FormatNumber(currentGold);
             if (buttonPulseAnimation != null) buttonPulseAnimation.Kill();
             upgradeButton.transform.localScale = upgradeButtonOriginalScale;
             return;
         }
 
-        long currentGold = CurrencyManager.Instance.CurrentGold;
+
         long requiredGold = UpgradeManager.Instance.levelConfigs[nextLevelIndex].upgradeCost;
         upgradeButtonText.text = $"{FormatNumber(currentGold)} / {FormatNumber(requiredGold)}";
         bool canAfford = currentGold >= requiredGold;
