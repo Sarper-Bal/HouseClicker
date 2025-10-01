@@ -60,6 +60,13 @@ public class MultiplierGameController : MonoBehaviour
 
         mainPanel.SetActive(false);
     }
+    private void OnDestroy()
+    {
+        // Bu script yok edilirken (örneğin sahne değiştiğinde),
+        // bu objeye ve alt objelerine bağlı TÜM DOTween animasyonlarını anında durdur.
+        // Bu, "Missing Target" hatalarını kökünden çözer.
+        transform.DOKill();
+    }
 
 
     // YENİ FONKSİYON: O anki seviyeye göre bahis miktarını hesaplar.
