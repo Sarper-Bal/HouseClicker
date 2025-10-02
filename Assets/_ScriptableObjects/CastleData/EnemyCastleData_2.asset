@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38e9d0347ce0145329abcb1652f63d8f, type: 3}
   m_Name: EnemyCastleData_2
   m_EditorClassIdentifier: Assembly-CSharp::EnemyCastleData
-  castleName: 1
+  castleName: Frozen Spire
   castleSprite: {fileID: 0}
   armyComposition:
   - soldierData: {fileID: 11400000, guid: 1afd27be147554b4ab79fe25ff766a57, type: 2}

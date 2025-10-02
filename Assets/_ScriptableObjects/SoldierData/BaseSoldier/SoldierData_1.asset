@@ -15,5 +15,5 @@ MonoBehaviour:
   soldierName: Aegis Knight
   shopIcon: {fileID: 21300000, guid: 26a66b669847049389466f097004188e, type: 3}
   cost: 10
-  health: 100000
-  attack: 1000000
+  health: 2
+  attack: 3

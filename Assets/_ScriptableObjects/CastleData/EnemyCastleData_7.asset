@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38e9d0347ce0145329abcb1652f63d8f, type: 3}
   m_Name: EnemyCastleData_7
   m_EditorClassIdentifier: Assembly-CSharp::EnemyCastleData
-  castleName: 1
+  castleName: Everwinter Tower
   castleSprite: {fileID: 0}
   armyComposition:
   - soldierData: {fileID: 11400000, guid: 40721dc22acd4425582830be642208df, type: 2}
