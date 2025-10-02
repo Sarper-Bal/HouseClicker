@@ -15,8 +15,10 @@ MonoBehaviour:
   castleName: 1
   castleSprite: {fileID: 0}
   armyComposition:
-  - soldierData: {fileID: 11400000, guid: a738bd1c884c74a7ea25328ba8bc397e, type: 2}
-    count: 2
   - soldierData: {fileID: 11400000, guid: 1afd27be147554b4ab79fe25ff766a57, type: 2}
-    count: 6
-  conquestGoldReward: 50
+    count: 10
+  - soldierData: {fileID: 11400000, guid: ae6c5c9f4b6ca4ff2820c4056f65e903, type: 2}
+    count: 10
+  - soldierData: {fileID: 11400000, guid: 40721dc22acd4425582830be642208df, type: 2}
+    count: 10
+  conquestGoldReward: 400

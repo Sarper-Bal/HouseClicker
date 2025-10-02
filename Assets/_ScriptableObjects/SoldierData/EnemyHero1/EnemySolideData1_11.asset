@@ -15,5 +15,5 @@ MonoBehaviour:
   soldierName: Blizzardkin
   shopIcon: {fileID: 21300000, guid: 3e83a17daa6c9473a886f76f26ac110c, type: 3}
   cost: 10
-  health: 1000
-  attack: 1000
+  health: 999
+  attack: 999
