@@ -15,5 +15,5 @@ MonoBehaviour:
   soldierName: Blightfrost
   shopIcon: {fileID: 21300000, guid: d14a99c362f824012a96f16957bd5378, type: 3}
   cost: 10
-  health: 6
-  attack: 1
+  health: 10
+  attack: 10

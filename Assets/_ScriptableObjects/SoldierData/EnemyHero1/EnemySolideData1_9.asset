@@ -15,5 +15,5 @@ MonoBehaviour:
   soldierName: Permafrost
   shopIcon: {fileID: 21300000, guid: 5fa2fa2fc7567445db70d0cadd95bc35, type: 3}
   cost: 10
-  health: 6
-  attack: 1
+  health: 8
+  attack: 16

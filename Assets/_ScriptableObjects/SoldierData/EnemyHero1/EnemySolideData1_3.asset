@@ -15,5 +15,5 @@ MonoBehaviour:
   soldierName: Winterwight
   shopIcon: {fileID: 21300000, guid: c5e00d496fc7145c2b015a50d1b9675b, type: 3}
   cost: 10
-  health: 6
-  attack: 1
+  health: 3
+  attack: 3
